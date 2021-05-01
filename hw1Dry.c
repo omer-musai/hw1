@@ -9,7 +9,6 @@ typedef struct node_t {
 typedef enum {
  SUCCESS=0,
  MEMORY_ERROR,
- EMPTY_LIST,
  UNSORTED_LIST,
  NULL_ARGUMENT,
 } ErrorCode;
@@ -27,11 +26,19 @@ Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code)
     if(list1->x > list2->x)
     {
         *error_code = mergeSortedLists_aux(list2, list1);
+        if(*error_code != SUCCESS)
+        {
+            return NULL;
+        }
         return list2;
     }
     else
     {
         *error_code = mergeSortedLists_aux(list1, list2);
+        if(*error_code != SUCCESS)
+        {
+            return NULL;
+        }
         return list1;
     }
 }
@@ -45,12 +52,7 @@ ErrorCode mergeSortedLists_aux(Node smallList, Node bigList)
         return SUCCESS;
     }
 
-    //check if the lists are sorted and not empty
-    if(!smallList || !bigList)
-    {
-        return EMPTY_LIST;
-    }
-
+    //check if the lists are sorted
     if(!isListSorted(smallList) || !isListSorted(bigList))
     {
         return UNSORTED_LIST;
@@ -68,7 +70,7 @@ ErrorCode mergeSortedLists_aux(Node smallList, Node bigList)
     {
         current = current->next;
     }
-
+    
     
     Node tmp = malloc(sizeof(*tmp));
     if(!tmp)
