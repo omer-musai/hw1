@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <assert.h>
 
 typedef struct node_t {
  int x;
@@ -13,83 +14,122 @@ typedef enum {
  NULL_ARGUMENT,
 } ErrorCode;
 
-//functions declaration
-bool isListSorted(Node list);
-Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code);
-ErrorCode mergeSortedLists_aux(Node smallList, Node bigList);
+//Function declarations:
 
+/* Receives sorted linked lists; returns a merged list and stores error code in error_code. */
+Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code);
+
+/* Performs the actual merging. */
+ErrorCode mergeSortedLists_aux(Node list1, Node list2, Node mergedList);
+
+/* Frees a null-terminated linked list. */
+void freeList(Node list);
+
+/* Creates a node and returns an error code (or SUCCESS if no error had occurred.) */
+ErrorCode createNode(Node mergedList);
 
 Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code)
 {
-    *error_code = NULL_ARGUMENT;
+    assert(error_code != NULL);
 
-    if(list1->x > list2->x)
+    *error_code = SUCCESS;
+
+    
+    if (list1 == NULL || list2 == NULL)
     {
-        *error_code = mergeSortedLists_aux(list2, list1);
-        if(*error_code != SUCCESS)
-        {
-            return NULL;
-        }
-        return list2;
+        *error_code = NULL_ARGUMENT;
     }
-    else
+    else if (!isListSorted(list1) || !isListSorted(list2))
     {
-        *error_code = mergeSortedLists_aux(list1, list2);
-        if(*error_code != SUCCESS)
-        {
-            return NULL;
-        }
-        return list1;
+        *error_code = UNSORTED_LIST;
     }
+
+    if (*error_code != SUCCESS)
+    {
+        return NULL;
+    }
+
+    Node mergedList = malloc(sizeof(*mergedList));
+    
+    *error_code = mergeSortedLists_aux(list1, list2, mergedList);
+    if (*error_code != SUCCESS)
+    {
+        freeList(mergedList);
+        return NULL;
+    }
+
+    return mergedList;
 }
 
-ErrorCode mergeSortedLists_aux(Node smallList, Node bigList)
+
+ErrorCode mergeSortedLists_aux(Node list1, Node list2, Node mergedList)
 {
-    //base case
-    if(!smallList->next)
+    ErrorCode memory_error = SUCCESS;
+    while (list1 != NULL && list2 != NULL && memory_error == SUCCESS)
     {
-        smallList->next = bigList;
-        return SUCCESS;
+        if(list1->x > list2->x)
+        {   
+            mergedList->x = list2->x;
+            list2 = list2->next;
+        }
+        else
+        {
+            mergedList->x = list1->x;
+            list1 = list1->next;
+        }
+
+        memory_error = createNode(mergedList);
+        mergedList = mergedList->next;
+    }
+    
+    
+
+    while (list1 != NULL && memory_error == SUCCESS)
+    {
+        mergedList->x = list1->x;
+        list1 = list1->next;
+        
+        memory_error = createNode(mergedList);
+        mergedList = mergedList->next;
     }
 
-    //check if the lists are sorted
-    if(!isListSorted(smallList) || !isListSorted(bigList))
+    while (list2 != NULL && memory_error == SUCCESS)
     {
-        return UNSORTED_LIST;
+        mergedList->x = list2->x;
+        list2 = list2->next;
+        
+        memory_error = createNode(mergedList);
+        mergedList = mergedList->next;
     }
 
-    Node current = malloc(sizeof(*current));
-    if(!current)
+    if (memory_error == SUCCESS)
+    {
+        free(mergedList); //Freeing the excess element.
+    }
+    
+    return memory_error;
+}
+
+void freeList(Node list)
+{
+    Node temp = list;
+    if (list == NULL) return;
+    while (list != NULL)
+    {
+        temp = list->next;
+        free(list);
+        list = temp;
+    }
+    return;
+}
+
+ErrorCode createNode(Node mergedList)
+{
+    mergedList->next = malloc(sizeof(*mergedList));
+    if (mergedList->next == NULL)
     {
         return MEMORY_ERROR;
     }
-
-    current = smallList;
-
-     while(current->x <= bigList->x && current->next->x <= bigList->x)
-    {
-        current = current->next;
-    }
-    
-    
-    Node tmp = malloc(sizeof(*tmp));
-    if(!tmp)
-    {
-        return MEMORY_ERROR;
-    }
-
-    //placeholder in order to not lose the list
-    tmp = current->next;
-
-    //link to the other list
-    current->next = bigList;
-
-    free(current);
-
-    //solve the same problem but smaller :)
-    ErrorCode condition = mergeSortedLists_aux(bigList, tmp);
-    
-    free(tmp);
-
-    return condition;
+    mergedList = mergedList->next;
+    return SUCCESS;
 }
