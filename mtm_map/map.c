@@ -66,22 +66,91 @@ void mapDestroy(Map map)
     
     free(map);
 }
+
 Map mapCopy(Map map)
 {
+    Map new_map = mapCreate(map->copyDataElement,
+                            map->copyKeyElement,
+                            map->freeDataElement,      
+                            map->freeKeyElement,
+                            map->compareElements);
 
+    MapNode *temp = map->elements;
+
+    while (temp != NULL)
+    {
+        if(mapPut(new_map, temp->key, temp->value) == MAP_NULL_ARGUMENT)
+        {
+            return NULL;
+        }
+        temp = temp->next;
+    }   
+
+    return new_map;
 }
+
+
 int mapGetSize(Map map)
 {
+    int counter = 0;
+    MapNode *temp = map->elements;
 
+    while (temp != NULL)
+    {
+        counter++;
+        temp = temp->next;
+    }   
+
+    return counter;
 }
+
+//COMMUNICATION: in map.h it says "This resets the internal iterator", i didn't fully understood what should i do about it.
 bool mapContains(Map map, MapKeyElement element)
 {
+    MapNode *temp = map->elements;
 
+    while (temp != NULL)
+    {
+       if(element == temp->key)
+       {
+           return true;
+       }
+       temp = temp->next;
+    }  
+
+    return false; 
 }
+
+//COMMUNICATION: in process
 MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement)
 {
+    MapNode *current = map->elements;
+
+    //COMMUNICATION: didn't used the mapContains function because i need the location of the node anyway to change his value.
+    while (current != NULL)
+    {
+       if(keyElement == current->key)
+       {
+           current->value = dataElement;
+           return MAP_ITEM_ALREADY_EXISTS;
+       }
+       current = current->next;
+    }
+
+    current = malloc(sizeof(*current));
+    if (current == NULL)
+    {
+        return MAP_NULL_ARGUMENT;
+    }
+
+    //COMMUNICATION: not sure if that how it should be done ><
+    current->key = copyKeyElement(keyElement);
+    current->value = copyDataElement(dataElement);
     
+    return MAP_SUCCESS;
 }
+
+
 MapDataElement mapGet(Map map, MapKeyElement keyElement)
 {
 

@@ -6,7 +6,7 @@
 
 implementation errors:
 1)line 23 - implementing an int value to a pointer
-2)line 24 - no memory for the "\0" charecter has been allocated
+2)line 24 - no memory for the "\0" character has been allocated
 3)line 27 - for i=0 str[*x - i] is out of the string boundaries
 4)
 5)
