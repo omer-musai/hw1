@@ -226,6 +226,10 @@ MapKeyElement mapGetFirst(Map map)
 
 MapKeyElement mapGetNext(Map map)
 {
+    if(map->iterator->next == NULL)
+    {
+        return NULL;
+    }
     MapKeyElement key = map->iterator->next->key;
    
     map->iterator = map->iterator->next;
@@ -245,6 +249,7 @@ MapResult mapClear(Map map)
         free(map->elements);
         
         map->elements = tmp;
+        return MAP_SUCCESS;
     }
 }
 
