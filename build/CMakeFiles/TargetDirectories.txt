@@ -1,0 +1,3 @@
+/home/omer_musai/mtm/hw1project/build/CMakeFiles/rebuild_cache.dir
+/home/omer_musai/mtm/hw1project/build/CMakeFiles/edit_cache.dir
+/home/omer_musai/mtm/hw1project/build/CMakeFiles/map.dir
