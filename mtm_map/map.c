@@ -5,11 +5,7 @@
 
 
 
-int main()
-{
 
-    
-}
 
 typedef enum FindResults
 { 
@@ -60,7 +56,6 @@ Map mapCreate(copyMapDataElements copyDataElement,
                 //initialize iterator and the head of the LL
                 map->iterator = map->elements = head;
                 
-
                 map->copyDataElement = copyDataElement;
                 map->copyKeyElement = copyKeyElement;
                 map->compareElements = compareKeyElements;
@@ -114,7 +109,7 @@ int mapGetSize(Map map)
     int counter = 0;
     MapNode *current = map->elements;
 
-    while (current != NULL)
+    while (current->next != NULL)
     {
         counter++;
         current = current->next;
@@ -153,7 +148,7 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement)
         map->freeDataElement(tmp->value);
         
         tmp->value = map->copyDataElement(dataElement);
-        return MAP_ITEM_ALREADY_EXISTS;
+        return MAP_SUCCESS;
     }
     else
     {
@@ -173,7 +168,7 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement)
         //reset the internal iterator
         map->iterator = map->elements;
 
-        return MAP_ITEM_DOES_NOT_EXIST;
+        return MAP_SUCCESS;
     }
 }
 
@@ -249,14 +244,15 @@ MapResult mapClear(Map map)
         free(map->elements);
         
         map->elements = tmp;
-        return MAP_SUCCESS;
+        
     }
+    return MAP_SUCCESS;
 }
 
 Results findElementPosition(Map map, MapNode** resultPtr, MapKeyElement key)
 {
-    int res =0;
-    MapNode *current = map->elements;
+    int res = 0;
+    MapNode *current = map->elements->next;
 
     while (current != NULL)
     {
@@ -277,9 +273,11 @@ Results findElementPosition(Map map, MapNode** resultPtr, MapKeyElement key)
        }
        else
        {
-           *resultPtr = map->elements;
-           return FOUND_BEFORE;
+           break;
        }
         current = current->next;
     }
+
+    *resultPtr = map->elements;
+    return FOUND_BEFORE;
 }
