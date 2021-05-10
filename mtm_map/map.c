@@ -4,14 +4,10 @@
 #include <stdlib.h>
 
 
-
-
-
-typedef enum FindResults
-{ 
-  FOUND_BEFORE,
-  FOUND,
-}Results;
+typedef enum SearchResults {
+    FOUND,
+    NOT_FOUND
+} SearchResults;
 
 typedef struct LinkedListNode
 {
@@ -21,7 +17,7 @@ typedef struct LinkedListNode
 } MapNode;
 
 //functions declaration
-Results findElementPosition(Map map, MapNode** resultPtr, MapKeyElement key);
+MapNode* findPreviousElementPosition(Map map, MapKeyElement key, SearchResults* results);
 
 struct Map_t
 {
@@ -52,6 +48,8 @@ Map mapCreate(copyMapDataElements copyDataElement,
                 {
                     return NULL;
                 }
+                head->key = NULL;
+                head->value = NULL;
 
                 //initialize iterator and the head of the LL
                 map->iterator = map->elements = head;
@@ -68,6 +66,9 @@ Map mapCreate(copyMapDataElements copyDataElement,
 
 void mapDestroy(Map map)
 {
+    MapNode *head = map->elements;
+    map->elements = map->elements->next;
+
     while (map->elements != NULL)
     {
         map->freeKeyElement(map->elements->key);
@@ -79,6 +80,7 @@ void mapDestroy(Map map)
         
         map->elements = tmp;
     }
+    free(head);
     free(map);
 }
 
@@ -139,42 +141,36 @@ bool mapContains(Map map, MapKeyElement element)
 
 MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement)
 {
-    MapNode* tmp;
+    map->iterator = map->elements;
 
-    Results position = findElementPosition(map, &tmp, keyElement);
+    SearchResults results;
+    MapNode* previous = findPreviousElementPosition(map, keyElement, &results);
 
-    if(position == FOUND)
+    if(results == FOUND)
     {
-        map->freeDataElement(tmp->value);
-        
-        tmp->value = map->copyDataElement(dataElement);
-        return MAP_SUCCESS;
+        map->freeDataElement(previous->next->value);
+        previous->next->value = map->copyDataElement(dataElement);
     }
     else
     {
         MapNode* new_node = malloc(sizeof(*new_node));
         if(new_node == NULL)
         {
-            return MAP_NULL_ARGUMENT;
+            return MAP_OUT_OF_MEMORY;
         }
-
-        new_node->next = tmp->next;
-       
-        tmp->next = new_node;
-
         new_node->value = map->copyDataElement(dataElement);
         new_node->key = map->copyKeyElement(keyElement);
-        
-        //reset the internal iterator
-        map->iterator = map->elements;
+        new_node->next = previous->next;
 
-        return MAP_SUCCESS;
+        previous->next = new_node;
     }
+
+    return MAP_SUCCESS;
 }
 
 MapDataElement mapGet(Map map, MapKeyElement keyElement)
 {
-    MapNode *current = map->elements;
+    MapNode *current = map->elements->next;
 
     while (current != NULL)
     {
@@ -190,26 +186,23 @@ MapDataElement mapGet(Map map, MapKeyElement keyElement)
 
 MapResult mapRemove(Map map, MapKeyElement keyElement)
 {
-    MapNode *current = map->elements;
-
-    while (current != NULL)
+    SearchResults result;
+    MapNode* previous = findPreviousElementPosition(map, keyElement, &result);
+    
+    if (result == FOUND)
     {
-       if(!map->compareElements(keyElement, current->key))
-       {
-            map->freeKeyElement(current->key);
-            map->freeDataElement(current->value);
+        map->freeKeyElement(previous->next->key);
+        map->freeDataElement(previous->next->value);
 
-            MapNode *tmp = current->next;
-            free(current);
-            current = tmp;
-             
-            //reset the internal iterator
-            map->iterator = map->elements;
+        MapNode* tmp = previous->next->next;
+        
+        free(previous->next);
 
-            return MAP_SUCCESS;
-       }
-       current = current->next;
+        previous->next = tmp;
+
+        return MAP_SUCCESS;
     }
+
     return MAP_ITEM_DOES_NOT_EXIST; 
 }
 
@@ -249,35 +242,36 @@ MapResult mapClear(Map map)
     return MAP_SUCCESS;
 }
 
-Results findElementPosition(Map map, MapNode** resultPtr, MapKeyElement key)
+MapNode* findPreviousElementPosition(Map map, MapKeyElement key, SearchResults* searchResults)
 {
-    int res = 0;
-    MapNode *current = map->elements->next;
+    int result;
+    MapNode *current = map->elements;
 
-    while (current != NULL)
+    while (current->next != NULL)
     {
-       res = map->compareElements(key, current->key);
+        result = map->compareElements(key, current->next->key);
 
-       if(res > 0)
-       {
-           if(current->next == NULL || map->compareElements(key, current->next->key) < 0)
-           {
-               *resultPtr = current;
-               return FOUND_BEFORE;
-           }
-       }
-       else if(res==0)
-       {
-           *resultPtr = current;
-           return FOUND;
-       }
-       else
-       {
-           break;
-       }
-        current = current->next;
+        if (result < 0) //Next is larger.
+        {
+            break;
+        }
+        else if (result == 0)
+        {
+            if (searchResults != NULL)
+            {
+                *searchResults = FOUND;
+            }
+        }
+        else //Next is smaller.
+        {
+            current = current->next;
+        }
     }
 
-    *resultPtr = map->elements;
-    return FOUND_BEFORE;
+    //If we're here then all list elements were smaller.
+    if (searchResults != NULL)
+    {
+        *searchResults = NOT_FOUND;
+    }
+    return current;
 }
