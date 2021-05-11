@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 99)
 set(MTM_FLAGS_DEBUG " -std=gnu99 -Wall -Werror -pedantic-errors -g")
 set(MTM_FLAGS_RELEASE "${MTM_FLAGS_DEBUG} -DNDEBUG -std=c99")
 
-set(HEADER_FILES ${workspaceFolder}/mtm_chess/chessSystem.h)
+set(HEADER_FILES ${workspaceFolder}/mtm_chess/chessSystem.h ${workspaceFolder}/mtm_chess/map.h)
 
 set(CMAKE_C_FALGS ${MTM_FLAGS_DEBUG})
 
