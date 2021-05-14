@@ -19,7 +19,7 @@ typedef struct game_t
     int id_player1;
     int id_player2;
     Winner score;
-    int game_time;
+    double game_time;
 
 } Game;
 
@@ -157,7 +157,7 @@ ChessSystem chessCreate()
     ChessSystem chess_system = malloc(sizeof(*chess_system));
     if(chess_system == NULL)
     {
-        return NULL;
+        return  CHESS_OUT_OF_MEMORY;
     }
     
     return chess_system;        
@@ -195,7 +195,8 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
     Tournament *tournament = malloc(sizeof(*tournament));
     if(tournament == NULL)
     {
-        return CHESS_NULL_ARGUMENT;
+        chessDestroy(chess);
+        return CHESS_OUT_OF_MEMORY;
     }
 
     MapResult result = mapPut(chess->tournaments, tournament_id, tournament);
@@ -234,14 +235,17 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     {
         return CHESS_GAME_ALREADY_EXISTS;
     }
+    //not done yet.
     if(playedMaximumGames(chess->games, first_player, second_player))
     {
         return CHESS_EXCEEDED_GAMES;
     }
+
     Game* gameToAdd = malloc(sizeof(*gameToAdd));
     if(gameToAdd == NULL)
     {
-        return NULL;
+        chessDestroy(chess);
+        return CHESS_OUT_OF_MEMORY;
     }
     
     gameToAdd->id_player1 = first_player;
@@ -257,7 +261,6 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     }
     
     return CHESS_SUCCESS;
-    
 }
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
@@ -278,7 +281,39 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
-	
+    if(player_id < 0)
+    {
+        chess_result =  CHESS_INVALID_ID;
+        return 0;
+    }
+   double total_time;
+   int counter =0;
+   MapKeyElement current_key = mapGetFirst(chess->games);
+
+   while(current_key != NULL)
+   {
+       MapDataElement current_value = mapGet(chess->games, current_key);
+      
+       Game value = *(Game *) current_value;
+       
+       if(value.id_player1 == player_id || value.id_player2 == player_id)
+       {
+           total_time += value.game_time;
+           counter++;
+       }
+       current_key = mapGetNext(chess->games);
+   }
+    
+    if(counter ==0)
+    {
+        chess_result == CHESS_PLAYER_NOT_EXIST;
+        return 0;
+    }
+
+    double avg_time = total_time/counter;
+  
+    return avg_time;
+
 }
 
 ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
@@ -335,6 +370,7 @@ bool alreadyExistInTournament(Map games, int first_player,int second_player)
    }
     return false;
 }
+
 
 bool playedMaximumGames(Map games, int first_player, int second_player)
 {
