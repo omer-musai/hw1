@@ -150,6 +150,8 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement)
     {
         map->freeDataElement(previous->next->value);
         previous->next->value = map->copyDataElement(dataElement);
+       
+        return MAP_ITEM_ALREADY_EXISTS;
     }
     else
     {
