@@ -265,8 +265,26 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 {   
+    if(tournament_id <= 0)
+    {
+        return CHESS_INVALID_ID;
+    }
+    if(!mapContains(chess->tournaments, tournament_id))
+    {
+        return CHESS_TOURNAMENT_NOT_EXIST;
+    }
     
+    MapDataElement tmp = mapGet(chess->tournaments, tournament_id);
+
+    Tournament current_tournament = *(Tournament *) tmp;
+   
+   //does mapRemove take care of the games or we should destory it by ourselves?
+    mapDestroy(current_tournament.game_ptrs);
+    mapRemove(chess->tournaments, tournament_id);
+
+    //TODO need to update the game statistics!
 	
+    return CHESS_SUCCESS;
 }
 
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
