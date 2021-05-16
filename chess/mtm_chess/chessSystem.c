@@ -7,11 +7,11 @@
 
 //TODO: Check if we're supposed to specify a constant length or not.
 #define LOCATION_MAX_LENGTH 1000
+#define NO_WINNER -1
 
 struct chess_system_t
 {
-    Map tournaments;      
-    Map games;      
+    Map tournaments;           
 };
 
 typedef struct game_t
@@ -28,15 +28,17 @@ typedef struct tournament_t
 {
     unsigned int tournament_id;
     char* location;
-    Map game_ptrs;
+    Map games;
     int winner;
+    int max_games_per_player;
 
 } Tournament;
 
 //functions declaration
 bool invalidLocation(char* tournament_location);
-bool alreadyExistInTournament(Map games, int first_player,int second_player);
-bool playedMaximumGames(Map games, int first_player, int second_player);
+bool alreadyExistsInTournament(Map games, int first_player,int second_player);
+bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player);
+bool playedMaximumGames(Tournament *tournament, int player);
 
 //methods declaration
 static MapDataElement copyTournamentData(MapDataElement tournament);
@@ -65,8 +67,9 @@ static MapDataElement copyTournamentData(MapDataElement tournament)
     copy->tournament_id = src.tournament_id;
     copy->location = malloc(sizeof(*(copy->location)) * LOCATION_MAX_LENGTH);
     strcpy(copy->location, src.location);
-    copy->game_ptrs = mapCopy(src.game_ptrs);
+    copy->games = mapCopy(src.games);
     copy->winner = src.winner;
+    copy->max_games_per_player = src.max_games_per_player;
 
     return copy;
 }
@@ -102,7 +105,7 @@ static void freeTournamentData(MapDataElement tournament)
     Tournament tournamentToFree = *(Tournament *) tournament;
     
     free(tournamentToFree.location);
-    mapDestroy(tournamentToFree.game_ptrs);
+    mapDestroy(tournamentToFree.games);
     free(tournament);
     
     return;
@@ -148,11 +151,6 @@ ChessSystem chessCreate()
                                 &freeTournamentData,
                                 &freeIntegerKey,
                                 &compareIntegerKeys);
-    Map games = mapCreate(&copyGameData,
-                        &copyIntegerId,
-                        &freeGameData,
-                        &freeIntegerKey,
-                        &compareIntegerKeys);
 
     ChessSystem chess_system = malloc(sizeof(*chess_system));
     if(chess_system == NULL)
@@ -171,7 +169,6 @@ void chessDestroy(ChessSystem chess)
     }
 
     mapDestroy(chess->tournaments);
-    mapDestroy(chess->games);
     free(chess);
     return;
 }
@@ -206,15 +203,41 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         free(tournament);
         return CHESS_TOURNAMENT_ALREADY_EXISTS;
     }
-    else
+    
+     
+    tournament->location = malloc(sizeof(*(tournament->location)) * LOCATION_MAX_LENGTH);
+    if (tournament->location == NULL)
     {
-        return CHESS_SUCCESS;
+        free(tournament);
+        chessDestroy(chess);
+        return CHESS_OUT_OF_MEMORY;
     }
+    strcpy(tournament->location, tournament_location);
+
+    tournament->games = mapCreate(&copyGameData,
+                        &copyIntegerId,
+                        &freeGameData,
+                        &freeIntegerKey,
+                        &compareIntegerKeys);
+    if (tournament->games == NULL)
+    {
+        free(tournament->location);
+        free(tournament);
+        chessDestroy(chess);
+        return CHESS_OUT_OF_MEMORY;
+    }
+
+    tournament->max_games_per_player = max_games_per_player;
+    tournament->tournament_id = tournament_id; 
+
+    return CHESS_SUCCESS;
 }
 
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
                          int second_player, Winner winner, int play_time)
 {
+    Tournament *tournament = mapGet(chess->tournaments, tournament_id);
+
     if(play_time < 0)
     {
         return CHESS_INVALID_PLAY_TIME;
@@ -223,20 +246,20 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     {
         return CHESS_INVALID_ID;
     }
-    else if(!mapContains(chess->tournaments, tournament_id))
+    else if(tournament == NULL)
     {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
-    else if(chessEndTournament(chess, tournament_id) == CHESS_TOURNAMENT_ENDED)
+    else if(winner != NO_WINNER)
     {
         return CHESS_TOURNAMENT_ENDED;
     }
-    if(alreadyExistInTournament(chess->games, first_player, second_player))
+    if(alreadyExistsInSystem(chess, first_player, second_player))
     {
         return CHESS_GAME_ALREADY_EXISTS;
     }
-    //not done yet.
-    if(playedMaximumGames(chess->games, first_player, second_player))
+    
+    if(playedMaximumGames(tournament, first_player) || playedMaximumGames(tournament, second_player))
     {
         return CHESS_EXCEEDED_GAMES;
     }
@@ -252,8 +275,8 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     gameToAdd->id_player2 = second_player;
     gameToAdd->score = winner;
     gameToAdd->game_time = play_time;
-
-    MapResult result = mapPut(chess->games, mapGetSize(chess->games), gameToAdd);
+    
+    MapResult result = mapPut(tournament->games, mapGetSize(tournament->games), gameToAdd);
 
     if (result == MAP_OUT_OF_MEMORY || result == MAP_NULL_ARGUMENT)
     {
@@ -277,9 +300,7 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     MapDataElement tmp = mapGet(chess->tournaments, tournament_id);
 
     Tournament current_tournament = *(Tournament *) tmp;
-   
-   //does mapRemove take care of the games or we should destory it by ourselves?
-    mapDestroy(current_tournament.game_ptrs);
+    
     mapRemove(chess->tournaments, tournament_id);
 
     //TODO need to update the game statistics!
@@ -368,33 +389,52 @@ bool invalidLocation(char* tournament_location)
     }    
 }
 
-bool alreadyExistInTournament(Map games, int first_player,int second_player)
+bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player)
 {
-    MapKeyElement current_key = mapGetFirst(games);
+    Tournament *current_tournament;
+    MAP_FOREACH(int, tournament_id, chess->tournaments)
+    {
+        current_tournament = mapGet(chess->tournaments, &tournament_id);
+        if (alreadyExistsInTournament(current_tournament->games, first_player, second_player))
+        {
+            return true;
+        }
+    }
 
-   while(current_key != NULL)
-   {
-       MapDataElement current_value = mapGet(games, current_key);
-      
-       Game value = *(Game *) current_value;
-
-       if((value.id_player1 == first_player || value.id_player1 == second_player) && 
-          (value.id_player2 == first_player || value.id_player2 == second_player))
-            {
-                return true;
-            }
-
-       current_key = mapGetNext(games);
-   }
     return false;
 }
 
 
-bool playedMaximumGames(Map games, int first_player, int second_player)
+bool alreadyExistsInTournament(Map games, int first_player,int second_player)
 {
-
-    
+    MAP_FOREACH(int, current_key, games)
+    {
+        Game *game = (mapGet(games, &current_key));
+        
+        if((game->id_player1 == first_player && game->id_player2 == second_player) ||
+          (game->id_player2 == first_player && game->id_player2 == second_player))
+            {
+                return true;
+            }
+    }
+    return false;
 
 }
+
+bool playedMaximumGames(Tournament *tournament, int player)
+{
+    int gamesPlayed = 0;
+    MAP_FOREACH(int, current_key, tournament->games)
+    {
+        Game *game = (mapGet(tournament->games, &current_key));
+        if(game->id_player1= player || game->id_player2 == player)
+        {
+            gamesPlayed++;
+        }
+    }
+
+    return (gamesPlayed >= tournament->max_games_per_player);
+}
+
 
  
