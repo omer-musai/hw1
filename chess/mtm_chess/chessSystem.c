@@ -303,14 +303,36 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     
     mapRemove(chess->tournaments, tournament_id);
 
-    //TODO need to update the game statistics!
+    //TODO: need to update the game statistics!
 	
     return CHESS_SUCCESS;
 }
 
+//TODO: in process, need to figure out how exactly remove a player (perhaps just set the id to 0?)
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 {
-	
+	if(player_id <= 0)
+    {
+        return CHESS_INVALID_ID;
+    }
+
+    Tournament *tournament;
+    Game *game;
+
+    MAP_FOREACH(int, current_tournament, chess->tournaments)
+    {
+        tournament = mapGet(chess->tournaments, &current_tournament);
+       
+        MAP_FOREACH(int, current_game, tournament->games )
+        {
+            game = mapGet(tournament->games, &current_game);
+
+            if(game->id_player1 == player_id || game->id_player2 == player_id)
+            {
+               
+            }
+        }
+    }
 }
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
@@ -320,39 +342,44 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
+    double total_time;
+    int num_of_games =0; 
+
+
     if(player_id < 0)
     {
         chess_result =  CHESS_INVALID_ID;
         return 0;
     }
-   double total_time;
-   int counter =0;
-   MapKeyElement current_key = mapGetFirst(chess->games);
 
-   while(current_key != NULL)
-   {
-       MapDataElement current_value = mapGet(chess->games, current_key);
-      
-       Game value = *(Game *) current_value;
+    Tournament *tournament;
+    Game *game;
+
+    MAP_FOREACH(int, current_tournament, chess->tournaments)
+    {
+        tournament = mapGet(chess->tournaments, &current_tournament);
        
-       if(value.id_player1 == player_id || value.id_player2 == player_id)
-       {
-           total_time += value.game_time;
-           counter++;
-       }
-       current_key = mapGetNext(chess->games);
-   }
-    
-    if(counter ==0)
+        MAP_FOREACH(int, current_game, tournament->games )
+        {
+            game = mapGet(tournament->games, &current_game);
+
+            if(game->id_player1 == player_id || game->id_player2 == player_id)
+            {
+                total_time += game->game_time;
+                num_of_games++;
+            }
+        }
+    }
+     
+    if(num_of_games == 0)
     {
         chess_result == CHESS_PLAYER_NOT_EXIST;
         return 0;
     }
 
-    double avg_time = total_time/counter;
+    double avg_time = (total_time / num_of_games);
   
     return avg_time;
-
 }
 
 ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
@@ -407,9 +434,11 @@ bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_playe
 
 bool alreadyExistsInTournament(Map games, int first_player,int second_player)
 {
+    Game *game;
+
     MAP_FOREACH(int, current_key, games)
     {
-        Game *game = (mapGet(games, &current_key));
+        game = (mapGet(games, &current_key));
         
         if((game->id_player1 == first_player && game->id_player2 == second_player) ||
           (game->id_player2 == first_player && game->id_player2 == second_player))
