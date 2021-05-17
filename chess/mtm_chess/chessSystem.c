@@ -329,7 +329,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
             if(game->id_player1 == player_id || game->id_player2 == player_id)
             {
-               
+               //TODO
             }
         }
     }
@@ -337,6 +337,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
+
 	
 }
 
@@ -395,11 +396,11 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 bool invalidLocation(char* tournament_location)
 {
     int i = 1;
-    if(tournament_location[0] < 'Z' && tournament_location[0] > 'A')
+    if(tournament_location[0] <= 'Z' && tournament_location[0] >= 'A')
     {
         while(tournament_location[i] != NULL)
         {
-            if((tournament_location[i] < 'z' && tournament_location[i] > 'a') || tournament_location[i] == ' ')
+            if((tournament_location[i] <= 'z' && tournament_location[i] >= 'a') || tournament_location[i] == ' ')
             {
                 i++;
             }
@@ -427,7 +428,6 @@ bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_playe
             return true;
         }
     }
-
     return false;
 }
 
@@ -438,7 +438,7 @@ bool alreadyExistsInTournament(Map games, int first_player,int second_player)
 
     MAP_FOREACH(int, current_key, games)
     {
-        game = (mapGet(games, &current_key));
+        game = mapGet(games, &current_key);
         
         if((game->id_player1 == first_player && game->id_player2 == second_player) ||
           (game->id_player2 == first_player && game->id_player2 == second_player))
@@ -447,23 +447,24 @@ bool alreadyExistsInTournament(Map games, int first_player,int second_player)
             }
     }
     return false;
-
 }
 
 bool playedMaximumGames(Tournament *tournament, int player)
-{
+{   
+    Game *game;
     int gamesPlayed = 0;
+
     MAP_FOREACH(int, current_key, tournament->games)
     {
-        Game *game = (mapGet(tournament->games, &current_key));
-        if(game->id_player1= player || game->id_player2 == player)
+        game = mapGet(tournament->games, &current_key);
+        if(game->id_player1 == player || game->id_player2 == player)
         {
             gamesPlayed++;
         }
     }
-
     return (gamesPlayed >= tournament->max_games_per_player);
 }
+
 
 
  
