@@ -308,7 +308,7 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     return CHESS_SUCCESS;
 }
 
-//TODO: in process, need to figure out how exactly remove a player (perhaps just set the id to 0?)
+//TODO: in process
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 {
 	if(player_id <= 0)
@@ -327,16 +327,22 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         {
             game = mapGet(tournament->games, &current_game);
 
-            if(game->id_player1 == player_id || game->id_player2 == player_id)
+            if(game->id_player1 == player_id)
             {
-               //TODO
+               game->score = SECOND_PLAYER;
+            }
+            if(game->id_player2 == player_id)
+            {
+                game->score = FIRST_PLAYER;
             }
         }
     }
 }
 
+
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
+   
 
 	
 }
@@ -345,7 +351,6 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
 {
     double total_time;
     int num_of_games =0; 
-
 
     if(player_id < 0)
     {
