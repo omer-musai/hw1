@@ -11,6 +11,7 @@
 
 struct chess_system_t
 {
+    Map players;
     Map tournaments;           
 };
 
@@ -20,9 +21,9 @@ typedef struct game_t
     int id_player2;
     Winner score;
     double game_time;
+    bool auto_win;
 
 } Game;
-
 
 typedef struct tournament_t
 {
@@ -33,6 +34,17 @@ typedef struct tournament_t
     int max_games_per_player;
 
 } Tournament;
+
+typedef struct player_t
+{
+    int player_id;
+    int wins;
+    int losses;
+    int draws;
+
+} Player;
+
+
 
 //functions declaration
 bool invalidLocation(char* tournament_location);
@@ -140,6 +152,7 @@ static MapDataElement copyGameData(MapDataElement game)
     copy->id_player1 = src.id_player1;
     copy->id_player2 = src.id_player2;
     copy->score = src.score;
+    copy->auto_win = src.auto_win;
 
     return copy;
 }
@@ -151,6 +164,9 @@ ChessSystem chessCreate()
                                 &freeTournamentData,
                                 &freeIntegerKey,
                                 &compareIntegerKeys);
+
+
+    Map players = mapCreate(//TODO);
 
     ChessSystem chess_system = malloc(sizeof(*chess_system));
     if(chess_system == NULL)
@@ -342,6 +358,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
+
    
 
 	
