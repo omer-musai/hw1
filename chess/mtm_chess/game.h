@@ -12,7 +12,7 @@
 typedef struct Game_t *Game;
 
 //Construction & destruction:
-Game createGame(int id_player1, int id_player2, Winner winner, double game_time);
+Game createGame(int id_player1, int id_player2, Winner winner, int game_time, ChessResult* error);
 
 void freeGame(Game game);
 
@@ -21,8 +21,9 @@ int getPlayer1Id(Game game);
 int getPlayer2Id(Game game);
 Winner getWinner(Game game);
 bool isPlayerForfeited(Game game);
-void setPlayerForfeited(Game game, int player_to_remove);
+void setPlayerForfeited(Game game, Winner player_to_remove);
 double getTime(Game game);
+Game copyGame(Game src);
 
 
 #endif

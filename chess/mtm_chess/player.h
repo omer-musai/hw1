@@ -20,6 +20,6 @@ void increaseDraws(Player player);
 int getLosses(Player player);
 void setLosses(Player player, int losses);
 void increaseLosses(Player player);
-
+Player copyPlayer(Player player);
 
 #endif //PLAYER_H

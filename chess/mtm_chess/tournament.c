@@ -11,25 +11,25 @@ struct Tournament_t
     int player_count;
 };
 
-Tournament createTournament(int tournament_id,char* location_str,
-                            int max_games_per_player, TournamentErrors *error)
+Tournament createTournament(int tournament_id, const char* location_str,
+                            int max_games_per_player, ChessResult* error)
 {
-    *error = NONE;
+    *error = CHESS_SUCCESS;
 
     if(invalidLocation(location_str))
     {
-        *error = INVALID_LOCATION;
+        *error = CHESS_INVALID_LOCATION;
     }
     else if(max_games_per_player <= 0)
     {
-        *error = INVALID_MAX_GAMES;
+        *error = CHESS_INVALID_MAX_GAMES;
     }
     else if(tournament_id <= 0)
     {
-        *error = INVALID_ID;
+        *error = CHESS_INVALID_ID;
     }
 
-    if (*error != NONE)
+    if (*error != CHESS_SUCCESS)
     {
         return NULL;
     }
@@ -37,7 +37,7 @@ Tournament createTournament(int tournament_id,char* location_str,
     Tournament tournament = malloc(sizeof(*tournament));
     if (tournament == NULL)
     {
-        *error = MEMORY_ALLOCATION;
+        *error = CHESS_OUT_OF_MEMORY;
         return NULL;
     }
 
@@ -45,24 +45,26 @@ Tournament createTournament(int tournament_id,char* location_str,
     tournament->location = malloc(sizeof(*(tournament->location)) * LOCATION_MAX_LENGTH);
     if (tournament->location == NULL)
     {
-        *error = MEMORY_ALLOCATION;
+        *error = CHESS_OUT_OF_MEMORY;
         free(tournament);
         return NULL;
     }
 
     strcpy(tournament->location, location_str);
 
+    //not exactly sure which functions to use here
     tournament->games = mapCreate(&copyGameData,
                         &copyIntegerId,
                         &freeGameData,
                         &freeIntegerKey,
                         &compareIntegerKeys);
+   
     if (tournament->games == NULL)
     {
         free(tournament->location);
         free(tournament);
-        chessDestroy(chess);
-        return CHESS_OUT_OF_MEMORY;
+        *error = CHESS_OUT_OF_MEMORY;
+        return NULL;
     }
 
     tournament->max_games_per_player = max_games_per_player;
@@ -72,21 +74,20 @@ Tournament createTournament(int tournament_id,char* location_str,
     return tournament;        
 }
 
+
 void freeTournament(Tournament tournament)
 {
-    free(tournament);
-    return;
-}
+    if(tournament == NULL)
+    {
+        return NULL;
+    }
 
-/*
-void destroyTournament(Tournament tournament)
-{
     free(tournament->location);
     mapDestroy(tournament->games);
     free(tournament);
     return;
 }
-*/
+
 
 //Getters & setters:
 int getId(Tournament tournament)
@@ -96,6 +97,10 @@ int getId(Tournament tournament)
 int calculateWinner(Tournament tournament)
 {
     return tournament->winner;
+}
+Map getGames(Tournament tournament)
+{
+    return tournament->games;
 }
 
 //Remember to free the return value of the following getters(relevant for the user):
@@ -113,6 +118,40 @@ int getPlayerCount(Tournament tournament)
 }
 
 
+Tournament copyTournament(Tournament src)
+{
+    if (src == NULL)
+    {
+        return NULL;
+    }
+
+    Tournament copy = malloc(sizeof(*copy));
+    if (copy == NULL)
+    {
+        return NULL;
+    }
+
+    copy->tournament_id = src->tournament_id;
+    copy->player_count = src->player_count;
+    copy->games = mapCopy(src->games);
+    copy->winner = src->winner;
+    copy->max_games_per_player = src->max_games_per_player;
+    copy->location = malloc(sizeof(*(copy->location)) * LOCATION_MAX_LENGTH);
+    if(copy->location == NULL)
+    {
+        return NULL;
+    }
+
+    strcpy(copy->location, src->location);
+
+    return copy;
+}
+
+
+
+
+
+//additional functions
 bool alreadyExistsInTournament(Map games, int first_player,int second_player)
 {
     Game game;
@@ -146,8 +185,12 @@ bool playedMaximumGames(Tournament tournament, int player)
     return (gamesPlayed >= tournament->max_games_per_player);
 }
 
-bool invalidLocation(char* tournament_location)
+bool invalidLocation(const char* tournament_location)
 {
+    if(tournament_location == NULL)
+    {
+        return true;
+    }
     int i = 1;
     if(tournament_location[0] <= 'Z' && tournament_location[0] >= 'A')
     {

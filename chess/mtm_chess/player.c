@@ -108,3 +108,23 @@ void increaseLosses(Player player)
     }
 }
 
+Player copyPlayer(Player player)
+{
+    if(!player)
+    {
+        return NULL;
+    }
+
+    Player copy = malloc(sizeof(*copy));
+    if(copy==NULL)
+    {
+        return NULL;
+    }
+    copy->player_id = player->player_id;
+    copy->wins = player->wins;
+    copy->losses = player->losses;
+    copy->draws = player->draws;
+
+    return copy;
+}
+
