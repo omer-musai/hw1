@@ -11,6 +11,7 @@
 
 
 #define LOCATION_MAX_LENGTH 100
+#define NO_WINNER -1
 
 
 /*     

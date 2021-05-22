@@ -45,17 +45,24 @@ static MapDataElement copyPlayerData(MapDataElement player);
 static void freePlayerData(MapDataElement player);
 
 //Implementing quicksort for the player level file saving:
-static void swap(int *a, int *b)
+static void swapIntegers(int *a, int *b)
 {
     int temp = *a;
     *a = *b;
     *b = temp;
 }
-static int partition(int *ids, int *levels, int length)
+static void swapDoubles(double *a, double *b)
 {
-    int left = 1, right = length - 1, pivot = levels[length/2];
-    swap(ids, ids + length/2);
-    swap(levels, levels + length/2);
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
+static int partition(int *ids, double *levels, int length)
+{
+    int left = 1, right = length - 1;
+    double pivot = levels[length/2];
+    swapIntegers(ids, ids + length/2);
+    swapDoubles(levels, levels + length/2);
 
     while (left <= right)
     {
@@ -73,22 +80,22 @@ static int partition(int *ids, int *levels, int length)
         {
             if (levels[left] < pivot)
             {
-                swap(ids + left, ids);
-                swap(levels + left, levels);
+                swapIntegers(ids + left, ids);
+                swapDoubles(levels + left, levels);
                 return left;
             }
-            swap(ids + left - 1, ids);
-            swap(levels + left - 1, levels);
+            swapIntegers(ids + left - 1, ids);
+            swapDoubles(levels + left - 1, levels);
             return left - 1;
         }
-        swap(ids + left, ids + right);
-        swap(levels + left, levels + right);
+        swapIntegers(ids + left, ids + right);
+        swapDoubles(levels + left, levels + right);
         ++left;
         --right;
     }
     return -1; //Shouldn't get here.
 }
-static void quicksort(int *ids, int *levels, int length)
+static void quicksort(int *ids, double *levels, int length)
 {
     if (length <= 1)
     {
@@ -129,6 +136,7 @@ static MapKeyElement copyIntegerId(MapKeyElement key)
 static void freeIntegerKey(MapKeyElement key)
 {
     //Our key is an integer so nothing needs to be done.
+    (void)key; //Just to silence the warning. //TODO: REMOVE!
 }
 
 static void freeTournamentData(MapDataElement tournament)
@@ -145,7 +153,6 @@ static int compareIntegerKeys(MapKeyElement key1, MapKeyElement key2)
 static void freeGameData(MapDataElement game)
 {
     freeGame((Game)game);
-    return;
 }
 
 static MapDataElement copyGameData(MapDataElement game)
@@ -230,7 +237,7 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         return error;
     }
 
-    MapResult result = mapPut(chess->tournaments, tournament_id, tournament);
+    MapResult result = mapPut(chess->tournaments, &tournament_id, tournament);
     
     if(result == MAP_ITEM_ALREADY_EXISTS)
     {   
@@ -241,7 +248,7 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
     {
         freeTournament(tournament);
         chessDestroy(chess);
-        return MAP_OUT_OF_MEMORY;
+        return CHESS_OUT_OF_MEMORY;
     }
     
     return CHESS_SUCCESS;
@@ -250,8 +257,8 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
                          int second_player, Winner winner, int play_time)
 {
-    ChessResult* error;
-    Tournament tournament = mapGet(chess->tournaments, tournament_id);
+    ChessResult error;
+    Tournament tournament = mapGet(chess->tournaments, &tournament_id);
     if(tournament == NULL)
     {
         return  CHESS_TOURNAMENT_NOT_EXIST;
@@ -276,26 +283,27 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_TOURNAMENT_ENDED;
     }
 
-    Game game = createGame(first_player, second_player, winner, play_time, error);
+    Game game = createGame(first_player, second_player, winner, play_time, &error);
     if(game == NULL)
     {
-        if(*error == CHESS_OUT_OF_MEMORY)
+        if(error == CHESS_OUT_OF_MEMORY)
         {
             chessDestroy(chess);
         }
-        return *error;
+        return error;
     }
 
     Map games = getGames(tournament);
 
     //set key to be the size of the map
-    MapResult result = mapPut(games, mapGetSize(games) + 1, game);
+    int newKey = mapGetSize(games) + 1;
+    MapResult result = mapPut(games, &newKey, game);
 
     if(result == MAP_OUT_OF_MEMORY)
     {
         freeGame(game);
         chessDestroy(chess);
-        return MAP_OUT_OF_MEMORY;
+        return CHESS_OUT_OF_MEMORY;
     }
     
     return CHESS_SUCCESS;
@@ -310,14 +318,15 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
         return CHESS_INVALID_ID;
     }
     
-    Tournament current_tournament = mapGet(chess->tournaments, tournament_id);
+    Tournament current_tournament = mapGet(chess->tournaments, &tournament_id);
     if(current_tournament == NULL)
     {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
     
     freeTournament(current_tournament);
-    ChessResult result = mapRemove(chess->tournaments, tournament_id);
+    MapResult result = mapRemove(chess->tournaments, &tournament_id);
+    (void)result;//Just to silence the warning. //TODO: REMOVE!
     
     
 
@@ -334,7 +343,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         return CHESS_INVALID_ID;
     }
 
-    Player player = mapGet(chess->players, player_id);
+    Player player = mapGet(chess->players, &player_id);
     if(player == NULL)
     {
         return CHESS_PLAYER_NOT_EXIST;
@@ -343,13 +352,13 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     Tournament tournament;
     Game game;
 
-    MAP_FOREACH(int, current_tournament, chess->tournaments)
+    MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
-        tournament = mapGet(chess->tournaments, &current_tournament);
+        tournament = mapGet(chess->tournaments, current_tournament);
        
-        MAP_FOREACH(int, current_game, getGames(tournament) )
+        MAP_FOREACH(int*, current_game, getGames(tournament) )
         {
-            game = mapGet(getGames(tournament), &current_game);
+            game = mapGet(getGames(tournament), current_game);
 
             if(getPlayer1Id(game) == player_id)
             {
@@ -359,12 +368,16 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
             {
                 setPlayerForfeited(game, SECOND_PLAYER);
             }
+
+            free(current_game);
         }
+        free(current_tournament);
     }
 
     freePlayer(player);
 
-    ChessResult result = mapRemove(chess->players, player_id);
+    MapResult result = mapRemove(chess->players, &player_id);
+    (void)result;//Just to silence the warning. //TODO: REMOVE!
     
     return CHESS_SUCCESS;
 }
@@ -378,7 +391,7 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
         return CHESS_INVALID_ID;
     }
     
-    Tournament tournament = mapGet(chess->tournaments, tournament_id);
+    Tournament tournament = mapGet(chess->tournaments, &tournament_id);
     
     if(isClosed(tournament))
     {
@@ -390,7 +403,7 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
     }
 
     int tournament_winner = calculateTournamentWinner(tournament);
-    if(tournament_winner == NULL)
+    if(tournament_winner == NO_WINNER)
     {
         chessDestroy(chess);
         return CHESS_OUT_OF_MEMORY;
@@ -406,37 +419,39 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
-    double total_time;
+    double total_time = 0;
     int num_of_games =0; 
 
     if(player_id < 0)
     {
-        chess_result =  CHESS_INVALID_ID;
+        *chess_result = CHESS_INVALID_ID;
         return 0;
     }
 
     Tournament tournament;
     Game game;
 
-    MAP_FOREACH(int, current_tournament, chess->tournaments)
+    MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
-        tournament = mapGet(chess->tournaments, &current_tournament);
+        tournament = mapGet(chess->tournaments, current_tournament);
        
-        MAP_FOREACH(int, current_game, getGames(tournament))
+        MAP_FOREACH(int*, current_game, getGames(tournament))
         {
-            game = mapGet(getGames(tournament), &current_game);
+            game = mapGet(getGames(tournament), current_game);
 
             if(getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id)
             {
                 total_time += getTime(game);
                 num_of_games++;
             }
+            free(current_game);
         }
+        free(current_tournament);
     }
      
     if(num_of_games == 0)
     {
-        chess_result == CHESS_PLAYER_NOT_EXIST;
+        *chess_result = CHESS_PLAYER_NOT_EXIST;
         return 0;
     }
 
@@ -453,52 +468,63 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
     int losses;
     int draws;
     int counter =0;
+    int size = mapGetSize(chess->players);
 
-    int* players_level = malloc(sizeof(int) * mapGetSize(chess->players));
-    if(players_level == NULL)
+    double* player_levels = malloc(sizeof(*player_levels) * size);
+    if(player_levels == NULL)
     {
         return CHESS_OUT_OF_MEMORY;
     }
-    int* ids = malloc(sizeof(int) * mapGetSize(chess->players));
+    int* ids = malloc(sizeof(*ids) * size);
     if(ids == NULL)
     {
+        free(player_levels);
         return CHESS_OUT_OF_MEMORY;
     }
 
-	MAP_FOREACH(int, current_player_id, chess->players)
-        {
-            current_player = mapGet(chess->players, &current_player_id);
-            wins = getWins(current_player);
-            losses = getLosses(current_player);
-            draws = getDraws(current_player);
+	MAP_FOREACH(int*, current_player_id, chess->players)
+    {
+        current_player = mapGet(chess->players, current_player_id);
+        wins = getWins(current_player);
+        losses = getLosses(current_player);
+        draws = getDraws(current_player);
 
-            player_level = ((6*wins - 10*losses + 2*draws) / (wins + losses + draws));
+        player_level = ((double)(6*wins - 10*losses + 2*draws) / (wins + losses + draws));
 
-            players_level[counter] = player_level;
-            ids[counter] = current_player_id;
+        player_levels[counter] = player_level;
+        ids[counter] = *current_player_id;
 
-            //TODO sort the arrays 
-        }
+        free(current_player_id);
+    }
 
-        
+    quicksort(ids, player_levels, size);
+
+    //TODO: save to file
+
+    free(ids);
+    free(player_levels);
+
+    return CHESS_SUCCESS;
 }
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 {
-	
+	return CHESS_SUCCESS;
 }
 
 
 bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player)
 {
     Tournament current_tournament;
-    MAP_FOREACH(int, tournament_id, chess->tournaments)
+    MAP_FOREACH(int*, tournament_id, chess->tournaments)
     {
-        current_tournament = mapGet(chess->tournaments, &tournament_id);
+        current_tournament = mapGet(chess->tournaments, tournament_id);
         if (alreadyExistsInTournament(getGames(current_tournament), first_player, second_player))
         {
             return true;
         }
+
+        free(tournament_id);
     }
     return false;
 }
@@ -532,4 +558,19 @@ MapResult addGameToTournament(ChessSystem chess, Game* game, int tournament_id)
 }
 */
 
+//TODO: REMOVE THIS GUY!
+void warningSilencer()
+{
+    chessRemovePlayer(NULL, 0);
+    chessEndTournament(NULL, 0);
+    freeGameData(NULL);
+    copyGameData(NULL);
+    chessCreate();
+    chessAddTournament(NULL, 0, 0, "");
+    chessAddGame(NULL, 0, 0, 0, FIRST_PLAYER, 0);
+    chessRemoveTournament(NULL, 0);
+    chessCalculateAveragePlayTime(NULL, 0, 0);
+    chessSavePlayersLevels(NULL, NULL);
+    chessSaveTournamentStatistics(NULL, NULL);
+}
  

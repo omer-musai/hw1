@@ -325,7 +325,7 @@ int calculateTournamentWinner(Tournament tournament)
     Map players_in_tournament = getTournamentPlayers(tournament);
     if(players_in_tournament == NULL)
     {
-        return NULL;
+        return NO_WINNER;
     }
 
      
