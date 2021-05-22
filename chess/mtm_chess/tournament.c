@@ -81,7 +81,7 @@ void freeTournament(Tournament tournament)
 {
     if(tournament == NULL)
     {
-        return NULL;
+        return;
     }
 
     free(tournament->location);
@@ -96,10 +96,12 @@ int getId(Tournament tournament)
 {
     return tournament->tournament_id;
 }
-int getTournamentWinner(Tournament tournament);
+
+int getTournamentWinner(Tournament tournament)
 {
     return tournament->winner;
 }
+
 Map getGames(Tournament tournament)
 {
     return tournament->games;
@@ -347,12 +349,12 @@ int calculateTournamentWinner(Tournament tournament)
                 }
                 else if(getLosses(current_player) == getLosses(current_winner))
                 {
-                    if(getwins(current_player) > getwins(current_winner))
+                    if(getWins(current_player) > getWins(current_winner))
                     {
                         current_winner_score = playerScore(current_player);
                         current_winner_id = &current_player_id;
                     }
-                    else if(getwins(current_player) == getwins(current_winner))
+                    else if(getWins(current_player) == getWins(current_winner))
                     {
                         if(current_player_id < current_winner_id)
                         {

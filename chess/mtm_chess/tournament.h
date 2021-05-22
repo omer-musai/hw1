@@ -27,7 +27,7 @@ typedef enum {
 typedef struct Tournament_t *Tournament;
 
 //Function declarations:
-bool playedMaximumGames(Tournament *tournament, int player);
+bool playedMaximumGames(Tournament tournament, int player);
 bool invalidLocation(const char* tournament_location);
 bool alreadyExistsInTournament(Map games, int first_player,int second_player);
 int calculateTournamentWinner(Tournament tournament);
