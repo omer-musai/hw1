@@ -54,7 +54,6 @@ Tournament createTournament(int tournament_id, const char* location_str,
 
     strcpy(tournament->location, location_str);
 
-    //not exactly sure which functions to use here
     tournament->games = mapCreate(&copyGame,
                         &copyGameId,
                         &freeGame,

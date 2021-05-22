@@ -53,7 +53,6 @@ static void freePlayerData(MapDataElement player);
 //Tournament and Game map methods:
 static MapDataElement copyTournamentData(MapDataElement tournament)
 {
-    //should we do casting here? (since we send tournament as mapDataElement type and not as Tournament type)
     Tournament copy = copyTournament((Tournament)tournament);
     
     return copy;
@@ -83,7 +82,6 @@ static void freeIntegerKey(MapKeyElement key)
 
 static void freeTournamentData(MapDataElement tournament)
 {
-    //agian, not sure about the casting
     freeTournament((Tournament)tournament);
     return;
 }
@@ -117,7 +115,6 @@ static void freePlayerData(MapDataElement player)
     freePlayer(player);
     return;
 }
-
 
 
 ChessSystem chessCreate()                 
@@ -377,7 +374,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     {
         tournament = mapGet(chess->tournaments, &current_tournament);
        
-        MAP_FOREACH(int, current_game, getGames(tournament) )
+        MAP_FOREACH(int, current_game, getGames(tournament))
         {
             game = mapGet(getGames(tournament), &current_game);
 
@@ -407,6 +404,18 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
     int wins;
     int losses;
     int draws;
+    int counter =0;
+
+    int* players_level = malloc(sizeof(int) * mapGetSize(chess->players));
+    if(players_level == NULL)
+    {
+        return CHESS_OUT_OF_MEMORY;
+    }
+    int* ids = malloc(sizeof(int) * mapGetSize(chess->players));
+    if(ids == NULL)
+    {
+        return CHESS_OUT_OF_MEMORY;
+    }
 
 	MAP_FOREACH(int, current_player_id, chess->players)
         {
@@ -416,8 +425,14 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
             draws = getDraws(current_player);
 
             player_level = ((6*wins - 10*losses + 2*draws) / (wins + losses + draws));
-           
+
+            players_level[counter] = player_level;
+            ids[counter] = current_player_id;
+
+            //TODO sort the arrays 
         }
+
+        
 }
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
