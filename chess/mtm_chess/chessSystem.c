@@ -93,6 +93,7 @@ static int compareIntegerKeys(MapKeyElement key1, MapKeyElement key2)
     return (*(int *) key1 - *(int *) key2);
 }
 
+
 static void freeGameData(MapDataElement game)
 {
     freeGame((Game)game);
@@ -113,7 +114,7 @@ static MapDataElement copyPlayerData(MapDataElement player)
 
 static void freePlayerData(MapDataElement player)
 {
-    free(player);
+    freePlayer(player);
     return;
 }
 
@@ -224,8 +225,8 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_EXCEEDED_GAMES;
     }
 
-    //not quite sure if that how we should check if tournament is ended(because we call a function that end it)
-    if(chessEndTournament(chess, tournament_id) == CHESS_TOURNAMENT_ENDED)
+    
+    if(isClosed(tournament))
     {
         return CHESS_TOURNAMENT_ENDED;
     }
@@ -326,10 +327,34 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
-    Tournament *tournament;
-
-    tournament = mapGet(chess->tournaments, tournament_id);
     
+    if(tournament_id <= 0)
+    {
+        return CHESS_INVALID_ID;
+    }
+    
+    Tournament tournament = mapGet(chess->tournaments, tournament_id);
+    
+    if(isClosed(tournament))
+    {
+        return  CHESS_TOURNAMENT_ENDED;
+    }
+    if(mapGetSize(getGames(tournament)) == 0)
+    {
+        return CHESS_NO_GAMES;   
+    }
+
+    int tournament_winner = calculateTournamentWinner(tournament);
+    if(tournament_winner == NULL)
+    {
+        chessDestroy(chess);
+        return CHESS_OUT_OF_MEMORY;
+    }
+
+    setTournamentWinner(tournament, tournament_winner);
+    close(tournament);
+
+    return CHESS_SUCCESS;  
 
 	
 }
@@ -352,13 +377,13 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     {
         tournament = mapGet(chess->tournaments, &current_tournament);
        
-        MAP_FOREACH(int, current_game, tournament->games )
+        MAP_FOREACH(int, current_game, getGames(tournament) )
         {
-            game = mapGet(tournament->games, &current_game);
+            game = mapGet(getGames(tournament), &current_game);
 
-            if(game->id_player1 == player_id || game->id_player2 == player_id)
+            if(getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id)
             {
-                total_time += game->game_time;
+                total_time += getTime(game);
                 num_of_games++;
             }
         }
@@ -377,7 +402,22 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
 
 ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 {
-	
+    double player_level;
+    Player current_player;
+    int wins;
+    int losses;
+    int draws;
+
+	MAP_FOREACH(int, current_player_id, chess->players)
+        {
+            current_player = mapGet(chess->players, &current_player_id);
+            wins = getWins(current_player);
+            losses = getLosses(current_player);
+            draws = getDraws(current_player);
+
+            player_level = ((6*wins - 10*losses + 2*draws) / (wins + losses + draws));
+           
+        }
 }
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
@@ -399,6 +439,16 @@ bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_playe
     }
     return false;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 /*

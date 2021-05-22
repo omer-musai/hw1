@@ -128,3 +128,24 @@ Player copyPlayer(Player player)
     return copy;
 }
 
+int playerScore(Player player)
+{
+    return ((2 * player->wins) + player->draws);
+}
+void freePlayerKey(int key)
+{
+    //Our key is an integer so nothing needs to be done.
+}
+
+int copyPlayerId(int id)
+{
+    int copy = id;
+    
+    return copy;
+}
+int comparePlayerKeys(int key1, int key2)
+{
+    return (key1 - key2);
+}
+
+

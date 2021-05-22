@@ -21,5 +21,12 @@ int getLosses(Player player);
 void setLosses(Player player, int losses);
 void increaseLosses(Player player);
 Player copyPlayer(Player player);
+int playerScore(Player player);
+void freePlayerKey(int key);
+int copyPlayerId(int id);
+int comparePlayerKeys(int key1, int key2);
+
+
+
 
 #endif //PLAYER_H

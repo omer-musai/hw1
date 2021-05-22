@@ -110,5 +110,18 @@ Game copyGame(Game src)
     return copy;
 }
 
+void freeGameKey(int key)
+{
+    //Our key is an integer so nothing needs to be done.
+}
 
-
+int copyGameId(int id)
+{
+    int copy = id;
+    
+    return copy;
+}
+int compareGameKeys(int key1, int key2)
+{
+    return (key1 - key2);
+}

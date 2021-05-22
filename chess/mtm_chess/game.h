@@ -22,8 +22,12 @@ int getPlayer2Id(Game game);
 Winner getWinner(Game game);
 bool isPlayerForfeited(Game game);
 void setPlayerForfeited(Game game, Winner player_to_remove);
-double getTime(Game game);
+int getTime(Game game);
 Game copyGame(Game src);
+void freeGameKey(int key);
+int copyGameId(int id);
+int compareGameKeys(int key1, int key2);
+
 
 
 #endif
