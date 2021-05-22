@@ -257,56 +257,28 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
                          int second_player, Winner winner, int play_time)
 {
-    ChessResult error;
-    Tournament tournament = mapGet(chess->tournaments, &tournament_id);
-    if(tournament == NULL)
-    {
-        return  CHESS_TOURNAMENT_NOT_EXIST;
-    }
-
-    if(alreadyExistsInSystem(chess, first_player, second_player))
-    {
-        return CHESS_GAME_ALREADY_EXISTS;
-    }
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
     }
-    if(playedMaximumGames(tournament, first_player) || playedMaximumGames(tournament, second_player))
+    if(alreadyExistsInSystem(chess, first_player, second_player))
     {
-        return CHESS_EXCEEDED_GAMES;
+        return CHESS_GAME_ALREADY_EXISTS;
     }
 
-    
-    if(isClosed(tournament))
+    Tournament tournament = mapGet(chess->tournaments, &tournament_id);
+    if(tournament == NULL)
     {
-        return CHESS_TOURNAMENT_ENDED;
+        return CHESS_TOURNAMENT_NOT_EXIST;
     }
 
-    Game game = createGame(first_player, second_player, winner, play_time, &error);
-    if(game == NULL)
+    ChessResult error =
+            addGameToTournament(tournament, first_player, second_player, winner, play_time, chess->players);
+    if (error == CHESS_OUT_OF_MEMORY)
     {
-        if(error == CHESS_OUT_OF_MEMORY)
-        {
-            chessDestroy(chess);
-        }
-        return error;
-    }
-
-    Map games = getGames(tournament);
-
-    //set key to be the size of the map
-    int newKey = mapGetSize(games) + 1;
-    MapResult result = mapPut(games, &newKey, game);
-
-    if(result == MAP_OUT_OF_MEMORY)
-    {
-        freeGame(game);
         chessDestroy(chess);
-        return CHESS_OUT_OF_MEMORY;
     }
-    
-    return CHESS_SUCCESS;
+    return error;
 }
 
 
@@ -499,7 +471,11 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 
     quicksort(ids, player_levels, size);
 
-    //TODO: save to file
+    //TODO: ensure I used fprintf correctly. Been a while...
+    for(int current = 0; current < size; ++current)
+    {
+        fprintf(file, "%d %f\n", ids[current], player_levels[current]);
+    }
 
     free(ids);
     free(player_levels);
@@ -519,7 +495,7 @@ bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_playe
     MAP_FOREACH(int*, tournament_id, chess->tournaments)
     {
         current_tournament = mapGet(chess->tournaments, tournament_id);
-        if (alreadyExistsInTournament(getGames(current_tournament), first_player, second_player))
+        if (alreadyExistsInTournament(current_tournament, first_player, second_player))
         {
             return true;
         }

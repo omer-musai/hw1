@@ -63,6 +63,18 @@ Winner getWinner(Game game)
     return game->winner;
 }
 
+int getWinnerId(Game game)
+{
+    return game->winner == FIRST_PLAYER ? getPlayer1Id(game) : getPlayer2Id(game);
+}
+
+bool didPlayerPlay(Game game, int player_id)
+{
+    return
+        ((!isPlayerForfeited(game) && (getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id))
+        || (isPlayerForfeited(game) && getWinnerId(game) == player_id));
+}
+
 bool isPlayerForfeited(Game game)
 {
     return game->auto_win;

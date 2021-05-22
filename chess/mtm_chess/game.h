@@ -20,6 +20,7 @@ void freeGame(Game game);
 int getPlayer1Id(Game game);
 int getPlayer2Id(Game game);
 Winner getWinner(Game game);
+int getWinnerId(Game game);
 bool isPlayerForfeited(Game game);
 void setPlayerForfeited(Game game, Winner player_to_remove);
 int getTime(Game game);
@@ -28,6 +29,10 @@ void freeGameKey(int key);
 int copyGameId(int id);
 int compareGameKeys(int key1, int key2);
 
+//This returns true if the player was one of the players, else false.
+//! NOTE: If player played but was removed (i.e player lost in auto-win), the value will be false.
+//(As per ourinstructions.)
+bool didPlayerPlay(Game game, int player_id);
 
 
 #endif

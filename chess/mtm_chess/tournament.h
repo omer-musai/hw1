@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include <assert.h>
 
 #define LOCATION_MAX_LENGTH 100
 #define NO_WINNER -1
@@ -28,11 +28,9 @@ typedef enum {
 typedef struct Tournament_t *Tournament;
 
 //Function declarations:
-bool playedMaximumGames(Tournament tournament, int player);
-bool invalidLocation(const char* tournament_location);
-bool alreadyExistsInTournament(Map games, int first_player,int second_player);
+bool alreadyExistsInTournament(Tournament tournament, int first_player,int second_player);
 int calculateTournamentWinner(Tournament tournament);
-Map getTournamentPlayers(Tournament tournament);
+//Map getTournamentPlayers(Tournament tournament); //TODO: Replace with appropriate methods.
 
 //Construction & destruction:
 Tournament createTournament(int tournament_id, const char* location_str,
@@ -42,7 +40,8 @@ void freeTournament(Tournament tournament);
 //Getters & setters:
 int getId(Tournament tournament);
 int getTournamentWinner(Tournament tournament);
-Map getGames(Tournament tournament);
+//Map getGames(Tournament tournament); //TODO: Remove.
+ChessResult addGameToTournament(Tournament tournament, int first_player, int second_player, Winner winner, int play_time, Map players_map); //TODO: Implement.
 Tournament copyTournament(Tournament src);
 void setTournamentWinner(Tournament tournament, int winner);
 void close(Tournament tournament);
