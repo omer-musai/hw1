@@ -5,7 +5,6 @@
 #include "map.h"
 #include "player.h"
 #include "tournament.h"
-#include "game.h"
 /*
            ___
          .';:;'.
@@ -23,10 +22,6 @@
                  .='/|\7      
                       ' `
 */
-
-//TODO: Check if we're supposed to specify a constant length or not.
-#define LOCATION_MAX_LENGTH 1000
-#define NO_WINNER -1
 
 struct chess_system_t
 {
@@ -49,6 +44,62 @@ static MapDataElement copyGameData(MapDataElement game);
 static MapDataElement copyPlayerData(MapDataElement player);
 static void freePlayerData(MapDataElement player);
 
+//Implementing quicksort for the player level file saving:
+static void swap(int *a, int *b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+static int partition(int *ids, int *levels, int length)
+{
+    int left = 1, right = length - 1, pivot = levels[length/2];
+    swap(ids, ids + length/2);
+    swap(levels, levels + length/2);
+
+    while (left <= right)
+    {
+        while (levels[left] < pivot && left < right)
+        {
+            ++left;
+        }
+
+        while (levels[right] >= pivot && left < right)
+        {
+            --right;
+        }
+
+        if (left == right)
+        {
+            if (levels[left] < pivot)
+            {
+                swap(ids + left, ids);
+                swap(levels + left, levels);
+                return left;
+            }
+            swap(ids + left - 1, ids);
+            swap(levels + left - 1, levels);
+            return left - 1;
+        }
+        swap(ids + left, ids + right);
+        swap(levels + left, levels + right);
+        ++left;
+        --right;
+    }
+    return -1; //Shouldn't get here.
+}
+static void quicksort(int *ids, int *levels, int length)
+{
+    if (length <= 1)
+    {
+        return;
+    }
+
+    int pivot_index = partition(ids, levels, length);
+
+    quicksort(ids, levels, pivot_index);
+    quicksort(ids + pivot_index + 1, levels + pivot_index + 1, length - (pivot_index + 1));
+}
 
 //Tournament and Game map methods:
 static MapDataElement copyTournamentData(MapDataElement tournament)
@@ -83,7 +134,6 @@ static void freeIntegerKey(MapKeyElement key)
 static void freeTournamentData(MapDataElement tournament)
 {
     freeTournament((Tournament)tournament);
-    return;
 }
 
 static int compareIntegerKeys(MapKeyElement key1, MapKeyElement key2) 
@@ -113,7 +163,6 @@ static MapDataElement copyPlayerData(MapDataElement player)
 static void freePlayerData(MapDataElement player)
 {
     freePlayer(player);
-    return;
 }
 
 
@@ -162,24 +211,23 @@ void chessDestroy(ChessSystem chess)
     mapDestroy(chess->tournaments);
     mapDestroy(chess->players);
     free(chess);
-    return;
 }
 
 ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
                                 int max_games_per_player, const char* tournament_location)
 {
-    ChessResult* error;
+    ChessResult error;
 
     Tournament tournament = createTournament(tournament_id, tournament_location,
-                            max_games_per_player, error);
+                            max_games_per_player, &error);
 
     if(tournament == NULL)
     {
-        if(*error == CHESS_OUT_OF_MEMORY)
+        if(error == CHESS_OUT_OF_MEMORY)
         {
-            chessDestrory(chess);
+            chessDestroy(chess);
         }
-        return *error;
+        return error;
     }
 
     MapResult result = mapPut(chess->tournaments, tournament_id, tournament);
@@ -192,7 +240,7 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
     if(result == MAP_OUT_OF_MEMORY)
     {
         freeTournament(tournament);
-        chessDestrory(chess);
+        chessDestroy(chess);
         return MAP_OUT_OF_MEMORY;
     }
     
@@ -233,7 +281,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     {
         if(*error == CHESS_OUT_OF_MEMORY)
         {
-            chessDestrory(chess);
+            chessDestroy(chess);
         }
         return *error;
     }
@@ -246,7 +294,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     if(result == MAP_OUT_OF_MEMORY)
     {
         freeGame(game);
-        chessDestrory(chess);
+        chessDestroy(chess);
         return MAP_OUT_OF_MEMORY;
     }
     
