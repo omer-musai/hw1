@@ -148,4 +148,35 @@ int comparePlayerKeys(int key1, int key2)
     return (key1 - key2);
 }
 
+//Map-related functions:
+MapDataElement mapPlayerCopy(MapDataElement player)
+{
+    return copyPlayer((Player)player);
+}
+
+MapKeyElement mapPlayerIdCopy(MapKeyElement id)
+{
+    int *new = malloc(sizeof(int));
+    if (new == NULL)
+    {
+        return NULL;
+    }
+    *new = *((int*)id);
+    return new;
+}
+
+void mapPlayerDataFree(MapDataElement player)
+{
+    freePlayer((Player)player);
+}
+
+void mapPlayerIdFree(MapKeyElement id)
+{
+    free((int*)id);
+}
+
+int mapPlayerKeyCompare(MapKeyElement id1, MapKeyElement id2)
+{
+    return comparePlayerKeys(*((int*)id1), *((int*)id2));
+}
 

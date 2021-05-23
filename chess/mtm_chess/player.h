@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <stdlib.h>
+#include "map.h"
 #define ILLEGAL_PLAYER (-1)
 
 //Type to expose:
@@ -26,6 +27,12 @@ void freePlayerKey(int key);
 int copyPlayerId(int id);
 int comparePlayerKeys(int key1, int key2);
 
+//Map-related functions:
+MapDataElement mapPlayerCopy(MapDataElement player);
+MapKeyElement mapPlayerIdCopy(MapKeyElement id);
+void mapPlayerDataFree(MapDataElement player);
+void mapPlayerIdFree(MapKeyElement id);
+int mapPlayerKeyCompare(MapKeyElement id1, MapKeyElement id2);
 
 
 

@@ -10,7 +10,6 @@
 #include <string.h>
 #include <assert.h>
 
-#define LOCATION_MAX_LENGTH 100
 #define NO_WINNER -1
 
 
@@ -42,18 +41,27 @@ int getId(Tournament tournament);
 int getTournamentWinner(Tournament tournament);
 //Map getGames(Tournament tournament); //TODO: Remove.
 ChessResult addGameToTournament(Tournament tournament, int first_player, int second_player, Winner winner, int play_time, Map players_map); //TODO: Implement.
+ChessResult removePlayer(Tournament tournament, int player_id);
+
 Tournament copyTournament(Tournament src);
-void setTournamentWinner(Tournament tournament, int winner);
-void close(Tournament tournament);
-bool isClosed(Tournament tournament);
-void freeTournamentKey(int key);
-int copyTournamentId(int id);
+ChessResult endTournament(Tournament tournament);
+bool isFinished(Tournament tournament);
 int compareTournamentKeys(int key1, int key2);
+int getGameCount(Tournament tournament);
+//If game_count is not null, the total game count will be put in it.
+int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count);
+void getGameTimeStatistics(Tournament tournament, int *longest_time, double *average_time);
 
 //Remember to free the return value of the following getters (relevant for the user):
 char* getLocation(Tournament tournament);
 int getPlayerGameLimit(Tournament tournament);
 int getPlayerCount(Tournament tournament);
 
+//Map-related functions:
+MapDataElement mapTournamentCopy(MapDataElement tournament);
+MapKeyElement mapTournamentIdCopy(MapKeyElement id);
+void mapTournamentDataFree(MapDataElement tournament);
+void mapTournamentIdFree(MapKeyElement id);
+int mapTournamentKeyCompare(MapKeyElement id1, MapKeyElement id2);
 
 #endif

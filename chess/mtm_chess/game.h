@@ -22,7 +22,7 @@ int getPlayer2Id(Game game);
 Winner getWinner(Game game);
 int getWinnerId(Game game);
 bool isPlayerForfeited(Game game);
-void setPlayerForfeited(Game game, Winner player_to_remove);
+void setPlayerForfeited(Game game, int player_to_remove_id);
 int getTime(Game game);
 Game copyGame(Game src);
 void freeGameKey(int key);
@@ -34,5 +34,14 @@ int compareGameKeys(int key1, int key2);
 //(As per ourinstructions.)
 bool didPlayerPlay(Game game, int player_id);
 
+//Returns the length of the game if given player participated in it; else returns 0.
+int getPlayerPlayTime(Game game, int player_id);
+
+//Map-related functions:
+MapDataElement mapGameCopy(MapDataElement game);
+MapKeyElement mapGameIdCopy(MapKeyElement id);
+void mapGameDataFree(MapDataElement game);
+void mapGameIdFree(MapKeyElement gameId);
+int mapGameKeyCompare(MapKeyElement id1, MapKeyElement id2);
 
 #endif

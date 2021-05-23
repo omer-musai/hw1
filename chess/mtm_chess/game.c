@@ -39,7 +39,7 @@ Game createGame(int id_player1, int id_player2, Winner winner, int game_time, Ch
     game->id_player2 = id_player2;
     game->winner = winner;
     game->game_time = game_time;
-    bool auto_win = false;
+    game->auto_win = false;
 
     return game;
 }
@@ -65,6 +65,10 @@ Winner getWinner(Game game)
 
 int getWinnerId(Game game)
 {
+    if (game->winner == DRAW)
+    {
+        return NO_WINNER;
+    }
     return game->winner == FIRST_PLAYER ? getPlayer1Id(game) : getPlayer2Id(game);
 }
 
@@ -75,14 +79,30 @@ bool didPlayerPlay(Game game, int player_id)
         || (isPlayerForfeited(game) && getWinnerId(game) == player_id));
 }
 
+int getPlayerPlayTime(Game game, int player_id)
+{
+    if (!didPlayerPlay(game, player_id))
+    {
+        return 0;
+    }
+
+    return getTime(game);
+}
+
 bool isPlayerForfeited(Game game)
 {
     return game->auto_win;
 }
 
-void setPlayerForfeited(Game game, Winner player_to_remove)
+void setPlayerForfeited(Game game, int player_to_remove_id)
 {
-    if(player_to_remove == FIRST_PLAYER)
+    assert(didPlayerPlay(game, player_to_remove_id));
+
+    if (isPlayerForfeited(game)) //Both players removed.
+    {
+        game->winner = DRAW;
+    }
+    else if (player_to_remove_id == getPlayer1Id(game))
     {
         game->winner = SECOND_PLAYER;
     }
@@ -122,11 +142,6 @@ Game copyGame(Game src)
     return copy;
 }
 
-void freeGameKey(int key)
-{
-    //Our key is an integer so nothing needs to be done.
-}
-
 int copyGameId(int id)
 {
     int copy = id;
@@ -136,4 +151,37 @@ int copyGameId(int id)
 int compareGameKeys(int key1, int key2)
 {
     return (key1 - key2);
+}
+
+
+//Map-related functions:
+MapDataElement mapGameCopy(MapDataElement game)
+{
+    return copyGame((Game)game);
+}
+
+MapKeyElement mapGameIdCopy(MapKeyElement id)
+{
+    int *new = malloc(sizeof(int));
+    if (new == NULL)
+    {
+        return NULL;
+    }
+    *new = *((int*)id);
+    return new;
+}
+
+void mapGameDataFree(MapDataElement game)
+{
+    freeGame((Game)game);
+}
+
+void mapGameIdFree(MapKeyElement gameId)
+{
+    free((int*)gameId);
+}
+
+int mapGameKeyCompare(MapKeyElement id1, MapKeyElement id2)
+{
+    return compareGameKeys(*((int*)id1), *((int*)id2));
 }

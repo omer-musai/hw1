@@ -26,23 +26,16 @@
 struct chess_system_t
 {
     Map players;
-    Map tournaments;           
+    Map tournaments;
+
+    //Used in saveTournamentStatistics because the "no tournaments ended" takes precedence
+    //over the "save failure" error.
+    bool tournament_ended;
 };
 
 
 //functions declaration
 bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player);
-
-//methods declaration
-static MapDataElement copyTournamentData(MapDataElement tournament);
-static MapKeyElement copyIntegerId(MapKeyElement key);
-static void freeIntegerKey(MapKeyElement key);
-static void freeTournamentData(MapDataElement tournament);
-static int compareIntegerKeys(MapKeyElement key1, MapKeyElement key2);
-static void freeGameData(MapDataElement game);
-static MapDataElement copyGameData(MapDataElement game);
-static MapDataElement copyPlayerData(MapDataElement player);
-static void freePlayerData(MapDataElement player);
 
 //Implementing quicksort for the player level file saving:
 static void swapIntegers(int *a, int *b)
@@ -109,88 +102,28 @@ static void quicksort(int *ids, double *levels, int length)
 }
 
 //Tournament and Game map methods:
-static MapDataElement copyTournamentData(MapDataElement tournament)
-{
-    Tournament copy = copyTournament((Tournament)tournament);
-    
-    return copy;
-}
-
-static MapKeyElement copyIntegerId(MapKeyElement key)
-{
-    if (!key) 
-    {
-        return NULL;
-    }
-    int *copy = malloc(sizeof(*copy));
-    
-    if (!copy)
-    {
-        return NULL;
-    }
-    
-    *copy = *(int *) key;
-    return copy;
-}
-
-static void freeIntegerKey(MapKeyElement key)
-{
-    //Our key is an integer so nothing needs to be done.
-    (void)key; //Just to silence the warning. //TODO: REMOVE!
-}
-
-static void freeTournamentData(MapDataElement tournament)
-{
-    freeTournament((Tournament)tournament);
-}
-
-static int compareIntegerKeys(MapKeyElement key1, MapKeyElement key2) 
-{
-    return (*(int *) key1 - *(int *) key2);
-}
 
 
-static void freeGameData(MapDataElement game)
-{
-    freeGame((Game)game);
-}
-
-static MapDataElement copyGameData(MapDataElement game)
-{
-    Game copy = copyGame((Game)game);
-    return copy;
-}
-
-static MapDataElement copyPlayerData(MapDataElement player)
-{
-    Player copy = copyPlayer((Player)player);
-    return copy;
-}
-
-static void freePlayerData(MapDataElement player)
-{
-    freePlayer(player);
-}
 
 
 ChessSystem chessCreate()                 
 {   
-    Map tournaments = mapCreate(&copyTournamentData,
-                                &copyIntegerId,
-                                &freeTournamentData,
-                                &freeIntegerKey,
-                                &compareIntegerKeys);
+    Map tournaments = mapCreate(&mapTournamentCopy,
+                                &mapTournamentIdCopy,
+                                &mapTournamentDataFree,
+                                &mapTournamentIdFree,
+                                &mapTournamentKeyCompare);
     
     if(tournaments == NULL)
     {
         return NULL;
     }
 
-    Map players = mapCreate(&copyPlayerData,
-                                &copyIntegerId,
-                                &freePlayerData,
-                                &freeIntegerKey,
-                                &compareIntegerKeys);
+    Map players = mapCreate(&mapPlayerCopy,
+                                &mapPlayerIdCopy,
+                                &mapPlayerDataFree,
+                                &mapPlayerIdFree,
+                                &mapPlayerKeyCompare);
 
     if(players == NULL)
     {
@@ -204,7 +137,10 @@ ChessSystem chessCreate()
         mapDestroy(tournaments);
         mapDestroy(players);
         return NULL;
-    }  
+    }
+
+    chess_system->tournament_ended = false;
+
     return chess_system;        
 }
 
@@ -322,77 +258,61 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     }
 
     Tournament tournament;
-    Game game;
+    ChessResult error = CHESS_SUCCESS;
 
     MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
         tournament = mapGet(chess->tournaments, current_tournament);
-       
-        MAP_FOREACH(int*, current_game, getGames(tournament) )
-        {
-            game = mapGet(getGames(tournament), current_game);
-
-            if(getPlayer1Id(game) == player_id)
-            {
-               setPlayerForfeited(game, FIRST_PLAYER);
-            }
-            if(getPlayer2Id(game) == player_id)
-            {
-                setPlayerForfeited(game, SECOND_PLAYER);
-            }
-
-            free(current_game);
-        }
+        error = removePlayer(tournament, player_id);
         free(current_tournament);
+        if (error != CHESS_SUCCESS)
+        {
+            break;
+        }
     }
 
     freePlayer(player);
 
-    MapResult result = mapRemove(chess->players, &player_id);
-    (void)result;//Just to silence the warning. //TODO: REMOVE!
+    if (error == CHESS_SUCCESS)
+    {
+        MapResult result = mapRemove(chess->players, &player_id);
+        if (result == MAP_OUT_OF_MEMORY)
+        {
+            error = CHESS_OUT_OF_MEMORY;
+            chessDestroy(chess);
+        }
+        else if (result == MAP_NULL_ARGUMENT)
+        {
+            error = CHESS_NULL_ARGUMENT;
+        }
+
+        assert(result != MAP_ITEM_DOES_NOT_EXIST);
+    }
     
-    return CHESS_SUCCESS;
+    return error;
 }
 
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
-    
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
     }
-    
     Tournament tournament = mapGet(chess->tournaments, &tournament_id);
-    
-    if(isClosed(tournament))
+
+    ChessResult error = endTournament(tournament);
+    if (error == CHESS_SUCCESS)
     {
-        return  CHESS_TOURNAMENT_ENDED;
+        chess->tournament_ended = true;
     }
-    if(mapGetSize(getGames(tournament)) == 0)
-    {
-        return CHESS_NO_GAMES;   
-    }
-
-    int tournament_winner = calculateTournamentWinner(tournament);
-    if(tournament_winner == NO_WINNER)
-    {
-        chessDestroy(chess);
-        return CHESS_OUT_OF_MEMORY;
-    }
-
-    setTournamentWinner(tournament, tournament_winner);
-    close(tournament);
-
-    return CHESS_SUCCESS;  
-
-	
+    return error;
 }
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
     double total_time = 0;
-    int num_of_games =0; 
+    int num_of_games = 0;
 
     if(player_id < 0)
     {
@@ -401,24 +321,15 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     }
 
     Tournament tournament;
-    Game game;
 
-    MAP_FOREACH(int*, current_tournament, chess->tournaments)
+    MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
     {
-        tournament = mapGet(chess->tournaments, current_tournament);
-       
-        MAP_FOREACH(int*, current_game, getGames(tournament))
-        {
-            game = mapGet(getGames(tournament), current_game);
+        tournament = mapGet(chess->tournaments, current_tournament_id);
+        assert(tournament != NULL);
 
-            if(getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id)
-            {
-                total_time += getTime(game);
-                num_of_games++;
-            }
-            free(current_game);
-        }
-        free(current_tournament);
+        total_time += getTotalPlayerPlayTime(tournament, player_id, &num_of_games);
+
+        free(current_tournament_id);
     }
      
     if(num_of_games == 0)
@@ -428,7 +339,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     }
 
     double avg_time = (total_time / num_of_games);
-  
+
     return avg_time;
 }
 
@@ -436,10 +347,8 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 {
     double player_level;
     Player current_player;
-    int wins;
-    int losses;
-    int draws;
-    int counter =0;
+    int wins, losses, draws;
+    int counter = 0;
     int size = mapGetSize(chess->players);
 
     double* player_levels = malloc(sizeof(*player_levels) * size);
@@ -471,20 +380,64 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 
     quicksort(ids, player_levels, size);
 
-    //TODO: ensure I used fprintf correctly. Been a while...
-    for(int current = 0; current < size; ++current)
+    //TODO: ensure I use fprintf correctly. Been a while...
+    ChessResult error = CHESS_SUCCESS;
+    for(int current = 0; current < size && error == CHESS_SUCCESS; ++current)
     {
-        fprintf(file, "%d %f\n", ids[current], player_levels[current]);
+        if (fprintf(file, "%d %.2f\n", ids[current], player_levels[current]) < 0)
+        {
+            error = CHESS_SAVE_FAILURE;
+        }
     }
 
     free(ids);
     free(player_levels);
 
-    return CHESS_SUCCESS;
+    return error;
 }
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 {
+    bool found_finished_tournament = false; //Will be used for asserting.
+    if (!chess->tournament_ended)
+    {
+        return CHESS_NO_TOURNAMENTS_ENDED;
+    }
+
+    FILE* file = fopen(path_file, "wt");
+    if (file == NULL)
+    {
+        return CHESS_SAVE_FAILURE;
+    }
+
+    MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
+    {
+        Tournament tournament = mapGet(chess->tournaments, current_tournament_id);
+        assert(tournament != NULL);
+
+        if (isFinished(tournament))
+        {
+            int longest_time;
+            double average_time;
+            getGameTimeStatistics(tournament, &longest_time, &average_time);
+            found_finished_tournament = true;
+            fprintf(file, "%d\n", getTournamentWinner(tournament));
+            fprintf(file, "%d\n", longest_time);
+            fprintf(file, "%.2f\n", average_time);
+            fprintf(file, "%s\n", getLocation(tournament));
+            fprintf(file, "%d\n", getGameCount(tournament));
+            fprintf(file, "%d\n", getPlayerCount(tournament));
+        }
+
+        free(current_tournament_id);
+    }
+
+    assert(found_finished_tournament);
+
+    if (fclose(file) == EOF)
+    {
+        return CHESS_SAVE_FAILURE;
+    }
 	return CHESS_SUCCESS;
 }
 
@@ -539,8 +492,6 @@ void warningSilencer()
 {
     chessRemovePlayer(NULL, 0);
     chessEndTournament(NULL, 0);
-    freeGameData(NULL);
-    copyGameData(NULL);
     chessCreate();
     chessAddTournament(NULL, 0, 0, "");
     chessAddGame(NULL, 0, 0, 0, FIRST_PLAYER, 0);
