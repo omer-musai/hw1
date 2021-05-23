@@ -514,9 +514,9 @@ int calculateTournamentWinner(Tournament tournament)
 }
 
 //Map-related functions:
-MapDataElement mapTournamentCopy(MapDataElement game)
+MapDataElement mapTournamentCopy(MapDataElement tournament)
 {
-    return copyGame((Game)game);
+    return copyTournament((Tournament)tournament);
 }
 
 MapKeyElement mapTournamentIdCopy(MapKeyElement id)

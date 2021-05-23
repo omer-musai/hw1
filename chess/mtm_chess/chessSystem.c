@@ -77,6 +77,8 @@ ChessSystem chessCreate()
         return NULL;
     }
 
+    chess_system->tournaments = tournaments;
+    chess_system->players = players;
     chess_system->tournament_ended = false;
 
     return chess_system;        
@@ -129,6 +131,7 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         chessDestroy(chess);
         return CHESS_OUT_OF_MEMORY;
     }
+    assert(result != MAP_NULL_ARGUMENT);
     
     return CHESS_SUCCESS;
 }
