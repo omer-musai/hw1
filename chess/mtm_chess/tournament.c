@@ -328,8 +328,6 @@ bool alreadyExistsInTournament(Tournament tournament, int first_player,int secon
     }
     return false;
 }
-   return (gamesPlayed >= tournament->max_games_per_player);
-}
 
 int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count)
 {
@@ -532,7 +530,7 @@ MapKeyElement mapTournamentIdCopy(MapKeyElement id)
     return new;
 }
 
-void mapGameDataFree(MapDataElement tournament)
+void mapTournamentDataFree(MapDataElement tournament)
 {
     freeTournament((Tournament)tournament);
 }
@@ -591,6 +589,8 @@ static bool playedMaximumGames(Tournament tournament, int player)
 
         free(current_key);
     }
+
+    return (gamesPlayed >= tournament->max_games_per_player);
 }
 
 static ChessResult updatePlayerStatistics(Game game, Map players, int player_id)

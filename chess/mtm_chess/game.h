@@ -1,6 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+typedef struct Game_t *Game;
+
 #include <stdbool.h>
 #include <stdio.h>
 #include "tournament.h"
@@ -9,7 +11,7 @@
 
 #define NO_WINNER -1
 
-typedef struct Game_t *Game;
+
 
 //Construction & destruction:
 Game createGame(int id_player1, int id_player2, Winner winner, int game_time, ChessResult* error);
