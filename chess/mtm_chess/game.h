@@ -33,7 +33,7 @@ Game copyGame(Game src);
 
 //This returns true if the player was one of the players, else false.
 //! NOTE: If player played but was removed (i.e player lost in auto-win), the value will be false.
-//(As per ourinstructions.)
+//(As per our instructions.)
 bool didPlayerPlay(Game game, int player_id);
 
 

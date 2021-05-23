@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <stdlib.h>
+#include <assert.h>
 #include "map.h"
 #define ILLEGAL_PLAYER (-1)
 

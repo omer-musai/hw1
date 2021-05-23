@@ -175,5 +175,5 @@ void mapGameIdFree(MapKeyElement gameId)
 
 int mapGameKeyCompare(MapKeyElement id1, MapKeyElement id2)
 {
-    return compareGameKeys(*((int*)id1), *((int*)id2));
+    return (*((int*)id1) - *((int*)id2));
 }

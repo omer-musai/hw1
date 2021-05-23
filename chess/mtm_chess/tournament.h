@@ -40,7 +40,7 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
 //This updates player statistics before a tournament's removal.
 //The players map is the one stored in the ChessSystem.
 ChessResult removeTournamentFromStatistics(Tournament tournament, Map players);
-ChessResult decreaseTournamentStatistics(Game game, Player player1, Player player2);
+void decreaseTournamentStatistics(Game game, Player player1, Player player2);
 ChessResult removePlayer(Tournament tournament, int player_id);
 bool alreadyExistsInTournament(Tournament tournament, int first_player,int second_player);
 int calculateTournamentWinner(Tournament tournament);

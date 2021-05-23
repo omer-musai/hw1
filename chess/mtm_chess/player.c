@@ -1,6 +1,6 @@
 #include "player.h"
 
-typedef struct Player_t
+struct Player_t
 {
     int player_id;
     int wins;
@@ -203,6 +203,6 @@ void mapPlayerIdFree(MapKeyElement id)
 
 int mapPlayerKeyCompare(MapKeyElement id1, MapKeyElement id2)
 {
-    return comparePlayerKeys(*((int*)id1), *((int*)id2));
+    return (*((int*)id1) - *((int*)id2));
 }
 

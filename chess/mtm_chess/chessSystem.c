@@ -36,6 +36,12 @@ struct chess_system_t
     bool tournament_ended;
 };
 
+//Declaring those for use in chessSavePlayersLevels:
+static void swapIntegers(int *a, int *b);
+static void swapDoubles(double *a, double *b);
+static int partition(int *ids, double *levels, int length);
+static void quicksort(int *ids, double *levels, int length);
+
 //Construction & destruction:
 ChessSystem chessCreate()                 
 {   
@@ -47,7 +53,7 @@ ChessSystem chessCreate()
     
     if(tournaments == NULL)
     {
-        return CHESS_OUT_OF_MEMORY;
+        return NULL;
     }
 
     Map players = mapCreate(&mapPlayerCopy,
@@ -59,7 +65,7 @@ ChessSystem chessCreate()
     if(players == NULL)
     {
         mapDestroy(tournaments);
-        return CHESS_OUT_OF_MEMORY;
+        return NULL;
     }
 
     ChessSystem chess_system = malloc(sizeof(*chess_system));
@@ -67,7 +73,7 @@ ChessSystem chessCreate()
     {
         mapDestroy(tournaments);
         mapDestroy(players);
-        return CHESS_OUT_OF_MEMORY;
+        return NULL;
     }
 
     chess_system->tournament_ended = false;
@@ -95,10 +101,10 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         return CHESS_NULL_ARGUMENT;
     }
 
-    ChessResult* error;
+    ChessResult error;
 
     Tournament tournament = createTournament(tournament_id, tournament_location,
-                            max_games_per_player, error);
+                            max_games_per_player, &error);
 
     if(tournament == NULL)
     {
@@ -163,6 +169,8 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     
     MapResult result = mapRemove(chess->tournaments, &tournament_id);
     freeTournament(tournament);
+
+    assert(result == MAP_SUCCESS);
     
     return CHESS_SUCCESS;
 }

@@ -203,16 +203,19 @@ ChessResult removeTournamentFromStatistics(Tournament tournament, Map players)
     MAP_FOREACH(int*, current_game, tournament->games)
     {
         Game game = mapGet(tournament->games, current_game);
-        Player player1 = mapGet(players, getPlayer1Id(game)),
-            player2 = mapGet(players, getPlayer2Id(game));
+        int id1 = getPlayer1Id(game), id2 = getPlayer2Id(game);
+        Player player1 = mapGet(players, &id1),
+            player2 = mapGet(players, &id2);
         
         decreaseTournamentStatistics(game, player1, player2);
 
         free(current_game);
     }
+
+    return CHESS_SUCCESS;
 }
 
-ChessResult decreaseTournamentStatistics(Game game, Player player1, Player player2)
+void decreaseTournamentStatistics(Game game, Player player1, Player player2)
 {
     Winner winner = getWinner(game);
     if (isPlayerForfeited(game))
@@ -411,7 +414,7 @@ Map createTournamentPlayersMap(Tournament tournament)
         if(!mapContains(players_in_tournament, &current_player2))
         {
             player = createPlayer(getPlayer2Id(game));
-            MapResult result = mapPut(players_in_tournament, current_player2, player);
+            MapResult result = mapPut(players_in_tournament, &current_player2, player);
             if(result == MAP_OUT_OF_MEMORY)
             {
                 mapDestroy(players_in_tournament);
@@ -541,7 +544,7 @@ void mapTournamentIdFree(MapKeyElement id)
 
 int mapTournamentKeyCompare(MapKeyElement id1, MapKeyElement id2)
 {
-    return compareTournamentKeys(*((int*)id1), *((int*)id2));
+    return (*((int*)id1) - *((int*)id2));
 }
 
 //static functions:
