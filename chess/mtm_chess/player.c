@@ -9,6 +9,7 @@ typedef struct Player_t
 
 };
 
+//Construction & destruction:
 Player createPlayer(int player_id)
 {
     Player player = malloc(sizeof(*player));
@@ -30,8 +31,12 @@ void freePlayer(Player player)
     free(player); //As promised :)
 }
 
+
+
+//Getters & Setters:
 int getWins(Player player)
 {
+    assert(player != NULL);
     if (player == NULL)
     {
         return ILLEGAL_PLAYER;
@@ -40,50 +45,9 @@ int getWins(Player player)
     return player->wins;
 }
 
-void setWins(Player player, int wins)
-{
-    if (player != NULL && wins >=0)
-    {
-        player->wins = wins;
-    }
-}
-
-void increaseWins(Player player)
-{
-    if (player != NULL)
-    {
-        ++(player->wins);
-    }
-}
-
-int getDraws(Player player)
-{
-    if (player == NULL)
-    {
-        return ILLEGAL_PLAYER;
-    }
-
-    return player->draws;
-}
-
-void setDraws(Player player, int draws)
-{
-    if (player != NULL && draws >= 0)
-    {
-        player->draws = draws;
-    }
-}
-
-void increaseDraws(Player player)
-{
-    if (player != NULL)
-    {
-        ++(player->draws);
-    }
-}
-
 int getLosses(Player player)
 {
+    assert(player != NULL);
     if (player == NULL)
     {
         return ILLEGAL_PLAYER;
@@ -92,19 +56,96 @@ int getLosses(Player player)
     return player->losses;
 }
 
+int getDraws(Player player)
+{
+    assert(player != NULL);
+    if (player == NULL)
+    {
+        return ILLEGAL_PLAYER;
+    }
+
+    return player->draws;
+}
+
+void setWins(Player player, int wins)
+{
+    assert(player != NULL);
+    if (player != NULL && wins >=0)
+    {
+        player->wins = wins;
+    }
+}
+
 void setLosses(Player player, int losses)
 {
+    assert(player != NULL);
     if (player != NULL && losses >=0)
     {
         player->losses = losses;
     }
 }
 
+void setDraws(Player player, int draws)
+{
+    assert(player != NULL);
+    if (player != NULL && draws >= 0)
+    {
+        player->draws = draws;
+    }
+}
+
+//additional functions:
+void increaseWins(Player player)
+{
+    assert(player != NULL);
+    if (player != NULL)
+    {
+        ++(player->wins);
+    }
+}
+
+void increaseDraws(Player player)
+{
+    assert(player != NULL);
+    if (player != NULL)
+    {
+        ++(player->draws);
+    }
+}
+
 void increaseLosses(Player player)
 {
+    assert(player != NULL);
     if (player != NULL)
     {
         ++(player->losses);
+    }
+}
+
+void decreaseWins(Player player)
+{
+    assert(player != NULL);
+    if (player != NULL)
+    {
+        --(player->wins);
+    }
+}
+
+void decreaseDraws(Player player)
+{
+    assert(player != NULL);
+    if (player != NULL)
+    {
+        --(player->draws);
+    }
+}
+
+void decreaseLosses(Player player)
+{
+    assert(player != NULL);
+    if (player != NULL)
+    {
+        --(player->losses);
     }
 }
 
@@ -131,21 +172,6 @@ Player copyPlayer(Player player)
 int playerScore(Player player)
 {
     return ((2 * player->wins) + player->draws);
-}
-void freePlayerKey(int key)
-{
-    //Our key is an integer so nothing needs to be done.
-}
-
-int copyPlayerId(int id)
-{
-    int copy = id;
-    
-    return copy;
-}
-int comparePlayerKeys(int key1, int key2)
-{
-    return (key1 - key2);
 }
 
 //Map-related functions:

@@ -6,6 +6,7 @@
 #include "player.h"
 #include "tournament.h"
 /*
+GOLLUM:
            ___
          .';:;'.
         /_' _' /\   __
@@ -23,6 +24,8 @@
                       ' `
 */
 
+#define INVALID -1
+
 struct chess_system_t
 {
     Map players;
@@ -33,79 +36,7 @@ struct chess_system_t
     bool tournament_ended;
 };
 
-
-//functions declaration
-bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player);
-
-//Implementing quicksort for the player level file saving:
-static void swapIntegers(int *a, int *b)
-{
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-static void swapDoubles(double *a, double *b)
-{
-    double temp = *a;
-    *a = *b;
-    *b = temp;
-}
-static int partition(int *ids, double *levels, int length)
-{
-    int left = 1, right = length - 1;
-    double pivot = levels[length/2];
-    swapIntegers(ids, ids + length/2);
-    swapDoubles(levels, levels + length/2);
-
-    while (left <= right)
-    {
-        while (levels[left] < pivot && left < right)
-        {
-            ++left;
-        }
-
-        while (levels[right] >= pivot && left < right)
-        {
-            --right;
-        }
-
-        if (left == right)
-        {
-            if (levels[left] < pivot)
-            {
-                swapIntegers(ids + left, ids);
-                swapDoubles(levels + left, levels);
-                return left;
-            }
-            swapIntegers(ids + left - 1, ids);
-            swapDoubles(levels + left - 1, levels);
-            return left - 1;
-        }
-        swapIntegers(ids + left, ids + right);
-        swapDoubles(levels + left, levels + right);
-        ++left;
-        --right;
-    }
-    return -1; //Shouldn't get here.
-}
-static void quicksort(int *ids, double *levels, int length)
-{
-    if (length <= 1)
-    {
-        return;
-    }
-
-    int pivot_index = partition(ids, levels, length);
-
-    quicksort(ids, levels, pivot_index);
-    quicksort(ids + pivot_index + 1, levels + pivot_index + 1, length - (pivot_index + 1));
-}
-
-//Tournament and Game map methods:
-
-
-
-
+//Construction & destruction:
 ChessSystem chessCreate()                 
 {   
     Map tournaments = mapCreate(&mapTournamentCopy,
@@ -116,7 +47,7 @@ ChessSystem chessCreate()
     
     if(tournaments == NULL)
     {
-        return NULL;
+        return CHESS_OUT_OF_MEMORY;
     }
 
     Map players = mapCreate(&mapPlayerCopy,
@@ -128,7 +59,7 @@ ChessSystem chessCreate()
     if(players == NULL)
     {
         mapDestroy(tournaments);
-        return NULL;
+        return CHESS_OUT_OF_MEMORY;
     }
 
     ChessSystem chess_system = malloc(sizeof(*chess_system));
@@ -136,7 +67,7 @@ ChessSystem chessCreate()
     {
         mapDestroy(tournaments);
         mapDestroy(players);
-        return NULL;
+        return CHESS_OUT_OF_MEMORY;
     }
 
     chess_system->tournament_ended = false;
@@ -159,10 +90,15 @@ void chessDestroy(ChessSystem chess)
 ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
                                 int max_games_per_player, const char* tournament_location)
 {
-    ChessResult error;
+    if(tournament_location == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
+    ChessResult* error;
 
     Tournament tournament = createTournament(tournament_id, tournament_location,
-                            max_games_per_player, &error);
+                            max_games_per_player, error);
 
     if(tournament == NULL)
     {
@@ -197,27 +133,18 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     {
         return CHESS_INVALID_ID;
     }
-    if(alreadyExistsInSystem(chess, first_player, second_player))
-    {
-        return CHESS_GAME_ALREADY_EXISTS;
-    }
 
     Tournament tournament = mapGet(chess->tournaments, &tournament_id);
-    if(tournament == NULL)
-    {
-        return CHESS_TOURNAMENT_NOT_EXIST;
-    }
 
     ChessResult error =
             addGameToTournament(tournament, first_player, second_player, winner, play_time, chess->players);
+    
     if (error == CHESS_OUT_OF_MEMORY)
     {
         chessDestroy(chess);
     }
     return error;
 }
-
-
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 {   
@@ -226,20 +153,17 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
         return CHESS_INVALID_ID;
     }
     
-    Tournament current_tournament = mapGet(chess->tournaments, &tournament_id);
-    if(current_tournament == NULL)
+    Tournament tournament = mapGet(chess->tournaments, &tournament_id);
+    if(tournament == NULL)
     {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
     
-    freeTournament(current_tournament);
+    removeTournamentFromStatistics(tournament, chess->players);
+    
     MapResult result = mapRemove(chess->tournaments, &tournament_id);
-    (void)result;//Just to silence the warning. //TODO: REMOVE!
+    freeTournament(tournament);
     
-    
-
-    //TODO: need to update the game statistics!
-	
     return CHESS_SUCCESS;
 }
 
@@ -269,6 +193,8 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         {
             break;
         }
+
+        free(current_tournament);
     }
 
     freePlayer(player);
@@ -291,7 +217,6 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     
     return error;
 }
-
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
@@ -317,7 +242,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     if(player_id < 0)
     {
         *chess_result = CHESS_INVALID_ID;
-        return 0;
+        return INVALID;
     }
 
     Tournament tournament;
@@ -335,7 +260,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     if(num_of_games == 0)
     {
         *chess_result = CHESS_PLAYER_NOT_EXIST;
-        return 0;
+        return INVALID;
     }
 
     double avg_time = (total_time / num_of_games);
@@ -354,12 +279,14 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
     double* player_levels = malloc(sizeof(*player_levels) * size);
     if(player_levels == NULL)
     {
+        chessDestroy(chess);
         return CHESS_OUT_OF_MEMORY;
     }
     int* ids = malloc(sizeof(*ids) * size);
     if(ids == NULL)
     {
         free(player_levels);
+        chessDestroy(chess);
         return CHESS_OUT_OF_MEMORY;
     }
 
@@ -441,63 +368,93 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 	return CHESS_SUCCESS;
 }
 
-
-bool alreadyExistsInSystem(ChessSystem chess, int first_player, int second_player)
+//Implementing quicksort for the player level file saving:
+static void swapIntegers(int *a, int *b)
 {
-    Tournament current_tournament;
-    MAP_FOREACH(int*, tournament_id, chess->tournaments)
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+static void swapDoubles(double *a, double *b)
+{
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
+static int partition(int *ids, double *levels, int length)
+{
+    int left = 1, right = length - 1;
+    double pivot = levels[length/2];
+    swapIntegers(ids, ids + length/2);
+    swapDoubles(levels, levels + length/2);
+
+    while (left <= right)
     {
-        current_tournament = mapGet(chess->tournaments, tournament_id);
-        if (alreadyExistsInTournament(current_tournament, first_player, second_player))
+        while (levels[left] < pivot && left < right)
         {
-            return true;
+            ++left;
         }
 
-        free(tournament_id);
+        while (levels[right] >= pivot && left < right)
+        {
+            --right;
+        }
+
+        if (left == right)
+        {
+            if (levels[left] < pivot)
+            {
+                swapIntegers(ids + left, ids);
+                swapDoubles(levels + left, levels);
+                return left;
+            }
+            swapIntegers(ids + left - 1, ids);
+            swapDoubles(levels + left - 1, levels);
+            return left - 1;
+        }
+        swapIntegers(ids + left, ids + right);
+        swapDoubles(levels + left, levels + right);
+        ++left;
+        --right;
     }
-    return false;
+    return -1; //Shouldn't get here.
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-MapResult addGameToTournament(ChessSystem chess, Game* game, int tournament_id)
+static void quicksort(int *ids, double *levels, int length)
 {
-   
-        TODO:
-        Add to tournament.
-        Increment player count if needed.
-        Add to players map if that's player's first game; otherwise, update.
-    
-    Tournament* tournament = mapGet(chess->tournaments, &tournament_id);
-
-    MAP_FOREACH(int, current_game, tournament->games)
+    if (length <= 1)
     {
-        if ()
+        return;
     }
+
+    int pivot_index = partition(ids, levels, length);
+
+    quicksort(ids, levels, pivot_index);
+    quicksort(ids + pivot_index + 1, levels + pivot_index + 1, length - (pivot_index + 1));
 }
+
+
+/*TODOS:
+(passive):
+Look for camelCased variables.(both)
+Look for TODOs\comments in the various files.(both)
+
+(active):
+
+
+
+Check tournament.c's getTournamentPlayers function(shay)
+Check calculateTournamentWinner logic(both)
+Remove warning-silencing stuff(shay) 
+!!! Check if it made sense to return copies of the IDs.(shay)
+check about cmakefile and what exactly we required to do(omer)
+
+DONE: 
+split getTournamentPlayers(omer)
+finish playerRemove function (update statistics)(omer)
+Ensure error order.(Omer) 
+Add chessDestroy wherever OUT_OF_MEMORY happens.(both)
+---Seems okay, I think--- Enable two games with the same players in different tournaments.(shay)
+if you could take a look about the "includes" in the ADT's (im afraid to miss\delete some includes)(shay)
 */
 
-//TODO: REMOVE THIS GUY!
-void warningSilencer()
-{
-    chessRemovePlayer(NULL, 0);
-    chessEndTournament(NULL, 0);
-    chessCreate();
-    chessAddTournament(NULL, 0, 0, "");
-    chessAddGame(NULL, 0, 0, 0, FIRST_PLAYER, 0);
-    chessRemoveTournament(NULL, 0);
-    chessCalculateAveragePlayTime(NULL, 0, 0);
-    chessSavePlayersLevels(NULL, NULL);
-    chessSaveTournamentStatistics(NULL, NULL);
-}
- 
+    

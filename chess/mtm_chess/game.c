@@ -9,6 +9,7 @@ struct Game_t
     bool auto_win;
 };
 
+//Construction & destruction:
 Game createGame(int id_player1, int id_player2, Winner winner, int game_time, ChessResult* error)
 {
    *error = CHESS_SUCCESS;
@@ -49,6 +50,7 @@ void freeGame(Game game)
     free(game);
 }
 
+//Getters & Setters:
 int getPlayer1Id(Game game)
 {
     return game->id_player1;
@@ -70,13 +72,6 @@ int getWinnerId(Game game)
         return NO_WINNER;
     }
     return game->winner == FIRST_PLAYER ? getPlayer1Id(game) : getPlayer2Id(game);
-}
-
-bool didPlayerPlay(Game game, int player_id)
-{
-    return
-        ((!isPlayerForfeited(game) && (getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id))
-        || (isPlayerForfeited(game) && getWinnerId(game) == player_id));
 }
 
 int getPlayerPlayTime(Game game, int player_id)
@@ -120,6 +115,8 @@ int getTime(Game game)
     return game->game_time;
 }
 
+
+//additional functions:
 Game copyGame(Game src)
 {
     if(!src)
@@ -142,17 +139,12 @@ Game copyGame(Game src)
     return copy;
 }
 
-int copyGameId(int id)
+bool didPlayerPlay(Game game, int player_id)
 {
-    int copy = id;
-    
-    return copy;
+    return
+        ((!isPlayerForfeited(game) && (getPlayer1Id(game) == player_id || getPlayer2Id(game) == player_id))
+        || (isPlayerForfeited(game) && getWinnerId(game) == player_id));
 }
-int compareGameKeys(int key1, int key2)
-{
-    return (key1 - key2);
-}
-
 
 //Map-related functions:
 MapDataElement mapGameCopy(MapDataElement game)
