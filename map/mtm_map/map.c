@@ -224,7 +224,7 @@ MapKeyElement mapGetNext(Map map)
    
     map->iterator = map->iterator->next;
     
-    return key;
+    return copyKeyElement(key);
 }
 
 MapResult mapClear(Map map)
