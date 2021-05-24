@@ -25,7 +25,7 @@ void freeTournament(Tournament tournament);
 int getTournamentWinner(Tournament tournament);
 int getGameCount(Tournament tournament);
 //If game_count is not null, the total game count will be put in it.
-int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count);
+int getTotalPlayerPlayTime(Tournament tournament, int id, int* tournament_game_count);
 void getGameTimeStatistics(Tournament tournament, int *longest_time, double *average_time);
 bool isFinished(Tournament tournament);
 char* getLocation(Tournament tournament);
@@ -39,7 +39,7 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
 //The players map is the one stored in the ChessSystem.
 ChessResult removeTournamentFromStatistics(Tournament tournament, Map players);
 void decreaseTournamentStatistics(Game game, Player player1, Player player2);
-ChessResult removePlayer(Tournament tournament, int player_id);
+ChessResult removePlayer(Tournament tournament, int player_id, Map players);
 bool alreadyExistsInTournament(Tournament tournament, int first_player,int second_player);
 int calculateTournamentWinner(Tournament tournament);
 Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament);

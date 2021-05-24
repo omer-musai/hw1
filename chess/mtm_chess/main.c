@@ -36,12 +36,9 @@ bool testChessAddTournament_segel() {
 
 bool testChessRemoveTournament_segel() {
     ChessSystem chess = chessCreate();
-    printf("line 39\n");
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "London") == CHESS_SUCCESS);
-    printf("line 41\n");
     ASSERT_TEST(chessAddTournament(chess, 2, 4, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessRemoveTournament(chess, 1) == CHESS_SUCCESS);
-    printf("line 44\n");
     ASSERT_TEST(chessRemoveTournament(chess, 1) == CHESS_TOURNAMENT_NOT_EXIST);
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "Paris") == CHESS_SUCCESS);
 
@@ -61,28 +58,20 @@ bool testChessAddGame_segel(){
 
 bool testChessPrintLevelsAndTournamentStatistics_segel(){
     FILE* file_levels = fopen("player_levels_your_output.txt", "w");
-    printf("ma kore po\n");
     if(!file_levels){
         printf("test failed to open file, make sure you have the folder tests in the same folder with chessSystem"
                "excutable file and you have write permissions for the file /tests/player_levels_your_output.txt");
         return false;
     }
-    printf("opened fileeee\n");
     ChessSystem chess = chessCreate();
-    printf("fuck u bitch\n");
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(chess, 1, 1, 2, FIRST_PLAYER, 2000) == CHESS_SUCCESS);
-    printf("line 73\n");
     ASSERT_TEST(chessAddGame(chess, 1, 1, 3, FIRST_PLAYER, 3000) == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(chess, 1, 3, 2, SECOND_PLAYER, 3000) == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(chess, 1, 4, 1, SECOND_PLAYER, 1000) == CHESS_SUCCESS);
-    printf("line 76\n");
     ASSERT_TEST(chessAddGame(chess, 1, 2, 4, FIRST_PLAYER, 3500) == CHESS_SUCCESS);
-    printf("line tytrytyeruetj\n");
     ASSERT_TEST(chessAddGame(chess, 1, 3, 4, DRAW, 400) == CHESS_SUCCESS);
-    printf("line 77\n");
     ASSERT_TEST(chessEndTournament(chess, 1) == CHESS_SUCCESS);
-    printf("line 79\n");
     ASSERT_TEST(chessSavePlayersLevels(chess, file_levels) == CHESS_SUCCESS);
     ASSERT_TEST(chessSaveTournamentStatistics(chess, "your_output/tournament_statistics_your_output.txt") == CHESS_SUCCESS);
     fclose(file_levels);
@@ -151,7 +140,7 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 2) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
+    ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_TOURNAMENT_ENDED);
     ASSERT_TEST(chessEndTournament(sys1, 4) == CHESS_TOURNAMENT_NOT_EXIST);
     ASSERT_TEST(chessEndTournament(sys1, -1) == CHESS_INVALID_ID);
 
@@ -159,7 +148,7 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ASSERT_TEST(chessAddGame(sys1, 1, 4, 5, FIRST_PLAYER, 10) == CHESS_TOURNAMENT_ENDED);
     ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_add_tournament_end_tournament_your_output.txt") == CHESS_SUCCESS);
     FILE* f1 = fopen("your_output/test_add_tournament_end_tournament_your_output.txt", "r");
-    FILE* f2 = fopen("expected_output/test_add_tournament_end_tournament_expected_output.txt", "r");
+    FILE* f2 = fopen("expected_output/test_add_tournament_end_tournament_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
     fclose(f1);
     fclose(f2);
@@ -248,7 +237,7 @@ bool testRemoveTournament_maaroof()
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
     ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_tournament_remove_your_output.txt") == CHESS_SUCCESS);
     FILE* f1 = fopen("your_output/test_tournament_remove_your_output.txt", "r");
-    FILE* f2 = fopen("expected_output/test_tournament_remove_expected_output.txt", "r");
+    FILE* f2 = fopen("expected_output/test_tournament_remove_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
     fclose(f1);
     fclose(f2);
@@ -381,7 +370,8 @@ bool testAvgGameTime_maaroof()
     ASSERT_TEST(chessAddGame(sys1, 2, player_1, player_3, FIRST_PLAYER, 20) == CHESS_SUCCESS);
     avg1 = chessCalculateAveragePlayTime(sys1, player_1, chess_result);
     ASSERT_TEST(*chess_result == CHESS_SUCCESS);
-    ASSERT_TEST(avg1 == 40.0/3.0);
+    double kek = (40.0/3.0);
+    ASSERT_TEST(avg1 == kek);
 
     avg1 = chessCalculateAveragePlayTime(sys1, player_3, chess_result);
     ASSERT_TEST(*chess_result == CHESS_SUCCESS);
@@ -406,7 +396,6 @@ bool testAvgGameTime_maaroof()
     avg1 = chessCalculateAveragePlayTime(sys1, player_3, chess_result);
     ASSERT_TEST(*chess_result == CHESS_SUCCESS);
     ASSERT_TEST(avg1 == 17);
-
     free(chess_result);
     chessDestroy(sys1);
     return true;
@@ -503,8 +492,7 @@ const char* testNames[] = {
 #define NUMBER_TESTS 12
 
 int main(int argc, char *argv[]) {
-    printf("IT BEGINS!");
-    if (argc == 1) {
+    if (1) {
         for (int test_idx = 0; test_idx < NUMBER_TESTS; test_idx++) {
             RUN_TEST(tests[test_idx], testNames[test_idx]);
         }

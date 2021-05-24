@@ -236,20 +236,24 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
     ChessResult error = CHESS_SUCCESS;
     if(tournament == NULL)
     {
-        error = CHESS_TOURNAMENT_NOT_EXIST;
+        error = CHESS_NULL_ARGUMENT;
+    }
+    else if(isFinished(tournament))
+    {
+        error = CHESS_TOURNAMENT_ENDED;
     }
     else if (alreadyExistsInTournament(tournament, first_player, second_player))
     {
         error = CHESS_GAME_ALREADY_EXISTS;
     }
+    else if (play_time < 0)
+    {
+        error = CHESS_INVALID_PLAY_TIME;
+    }
     else if(playedMaximumGames(tournament, first_player)
         || playedMaximumGames(tournament, second_player))
     {
         error = CHESS_EXCEEDED_GAMES;
-    }
-    else if(isFinished(tournament))
-    {
-        error = CHESS_TOURNAMENT_ENDED;
     }
 
     if (error != CHESS_SUCCESS)
@@ -281,7 +285,7 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
     return updatePlayersStatistics(mapGet(tournament->games, &newKey), players_map);
 }
 
-ChessResult removePlayer(Tournament tournament, int player_id)
+ChessResult removePlayer(Tournament tournament, int player_id, Map players)
 {
     MAP_FOREACH(int*, current_game_id, tournament->games)
     {
@@ -290,7 +294,7 @@ ChessResult removePlayer(Tournament tournament, int player_id)
 
         if(didPlayerPlay(game, player_id))
         {
-            setPlayerForfeited(game, player_id);
+            setPlayerForfeited(game, player_id, players);
         }
 
         free(current_game_id);
@@ -318,12 +322,12 @@ bool alreadyExistsInTournament(Tournament tournament, int first_player,int secon
     return false;
 }
 
-int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count)
+int getTotalPlayerPlayTime(Tournament tournament, int id, int* tournament_game_count)
 {
     int total_playtime = 0;
-    if (game_count != NULL)
+    if (tournament_game_count != NULL)
     {
-        *game_count = 0;
+        *tournament_game_count = 0;
     }
 
     MAP_FOREACH(int*, current_game_id, tournament->games)
@@ -332,9 +336,9 @@ int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count)
         assert(game != NULL);
 
         total_playtime += getPlayerPlayTime(game, id);
-        if (game_count != NULL)
+        if (tournament_game_count != NULL && didPlayerPlay(game, id))
         {
-            ++(*game_count);
+            ++(*tournament_game_count);
         }
 
         free(current_game_id);
@@ -573,9 +577,11 @@ static bool playedMaximumGames(Tournament tournament, int player)
     MAP_FOREACH(int*, current_key, tournament->games)
     {
         game = mapGet(tournament->games, current_key);
-        if(getPlayer1Id(game) == player || getPlayer2Id(game) == player)
+        bool isAutoWin = isPlayerForfeited(game);
+        if (((isAutoWin && getWinnerId(game) == player))
+             || ((!isAutoWin) && (getPlayer1Id(game) == player || getPlayer2Id(game) == player)))
         {
-            gamesPlayed++;
+            ++gamesPlayed;
         }
 
         free(current_key);

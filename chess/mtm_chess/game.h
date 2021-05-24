@@ -24,7 +24,7 @@ int getPlayer2Id(Game game);
 Winner getWinner(Game game);
 int getWinnerId(Game game);
 bool isPlayerForfeited(Game game);
-void setPlayerForfeited(Game game, int player_to_remove_id);
+void setPlayerForfeited(Game game, int player_to_remove_id, Map players);
 int getTime(Game game);
 
 //Returns the length of the game if given player participated in it; else returns 0.

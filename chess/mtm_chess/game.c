@@ -89,7 +89,7 @@ bool isPlayerForfeited(Game game)
     return game->auto_win;
 }
 
-void setPlayerForfeited(Game game, int player_to_remove_id)
+void setPlayerForfeited(Game game, int player_to_remove_id, Map players)
 {
     assert(didPlayerPlay(game, player_to_remove_id));
 
@@ -99,11 +99,27 @@ void setPlayerForfeited(Game game, int player_to_remove_id)
     }
     else if (player_to_remove_id == getPlayer1Id(game))
     {
+        if (game->winner == FIRST_PLAYER)
+        {
+            int id2 = getPlayer2Id(game);
+            Player player2 = mapGet(players, &id2);
+            assert(player2 != NULL);
+            increaseWins(player2);
+            decreaseLosses(player2);
+        }
         game->winner = SECOND_PLAYER;
     }
     else
     {
-        game->winner = FIRST_PLAYER;
+        if (game->winner == SECOND_PLAYER)
+        {
+            int id1 = getPlayer1Id(game);
+            Player player1 = mapGet(players, &id1);
+            assert(player1 != NULL);
+            increaseWins(player1);
+            decreaseLosses(player1);
+        }
+        game->winner = FIRST_PLAYER;        
     }
 
     game->auto_win = true;

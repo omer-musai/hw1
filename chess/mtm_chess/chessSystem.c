@@ -103,7 +103,10 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
     {
         return CHESS_NULL_ARGUMENT;
     }
-    
+    if(tournament_id <= 0)
+    {
+        return CHESS_INVALID_ID;
+    }
     if(mapContains(chess->tournaments, &tournament_id))
     {
         return CHESS_TOURNAMENT_ALREADY_EXISTS;
@@ -123,8 +126,6 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         return error;
     }
 
-    
-
     MapResult result = mapPut(chess->tournaments, &tournament_id, tournament);
     freeTournament(tournament);
 
@@ -141,12 +142,22 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
                          int second_player, Winner winner, int play_time)
 {
-    if(tournament_id <= 0)
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+    
+    if(tournament_id <= 0 || first_player <= 0 || second_player <= 0)
     {
         return CHESS_INVALID_ID;
     }
 
     Tournament tournament = mapGet(chess->tournaments, &tournament_id);
+
+    if (tournament == NULL)
+    {
+        return CHESS_TOURNAMENT_NOT_EXIST;
+    }
 
     ChessResult error =
             addGameToTournament(tournament, first_player, second_player, winner, play_time, chess->players);
@@ -159,7 +170,11 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
 }
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
-{   
+{  
+     if(chess == NULL)
+        {
+            return CHESS_NULL_ARGUMENT;
+        }
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -200,7 +215,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
         tournament = mapGet(chess->tournaments, current_tournament);
-        error = removePlayer(tournament, player_id);
+        error = removePlayer(tournament, player_id, chess->players);
         free(current_tournament);
         if (error != CHESS_SUCCESS)
         {
@@ -239,6 +254,11 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
     }
     Tournament tournament = mapGet(chess->tournaments, &tournament_id);
 
+    if (tournament == NULL)
+    {
+        return CHESS_TOURNAMENT_NOT_EXIST;
+    }
+
     ChessResult error = endTournament(tournament);
     if (error == CHESS_SUCCESS)
     {
@@ -249,8 +269,11 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
-    double total_time = 0;
-    int num_of_games = 0;
+    if(chess_result == NULL || chess == NULL)
+    {
+        *chess_result = CHESS_NULL_ARGUMENT;
+        return INVALID;
+    }
 
     if(player_id < 0)
     {
@@ -258,14 +281,16 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
         return INVALID;
     }
 
-    Tournament tournament;
-
+    double total_time = 0;
+    int num_of_games = 0, tournament_games;
+    
     MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
     {
-        tournament = mapGet(chess->tournaments, current_tournament_id);
+        Tournament tournament = mapGet(chess->tournaments, current_tournament_id);
         assert(tournament != NULL);
 
-        total_time += getTotalPlayerPlayTime(tournament, player_id, &num_of_games);
+        total_time += getTotalPlayerPlayTime(tournament, player_id, &tournament_games);
+        num_of_games += tournament_games;
 
         free(current_tournament_id);
     }
@@ -276,8 +301,9 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
         return INVALID;
     }
 
-    double avg_time = (total_time / num_of_games);
+    double avg_time = (total_time / (double)num_of_games);
 
+    *chess_result = CHESS_SUCCESS;
     return avg_time;
 }
 
@@ -313,18 +339,16 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
         player_level = ((double)(6*wins - 10*losses + 2*draws) / (wins + losses + draws));
 
         player_levels[counter] = player_level;
-        ids[counter] = *current_player_id;
-
+        ids[counter++] = *current_player_id;
         free(current_player_id);
     }
 
     quicksort(ids, player_levels, size);
 
-    //TODO: ensure I use fprintf correctly. Been a while...
     ChessResult error = CHESS_SUCCESS;
     for(int current = 0; current < size && error == CHESS_SUCCESS; ++current)
     {
-        if (fprintf(file, "%d %.2f\n", ids[current], player_levels[current]) < 0)
+        if (fprintf(file, "%d %.2f\n", ids[size - 1 - current], player_levels[size - 1 - current]) < 0)
         {
             error = CHESS_SAVE_FAILURE;
         }
@@ -349,13 +373,11 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
         return CHESS_NO_TOURNAMENTS_ENDED;
     }
 
-    FILE *file = fopen(path_file, "wt");
+    FILE *file = fopen(path_file, "w");
     if (file == NULL)
     {
         return CHESS_SAVE_FAILURE;
     }
-
-    bool first = true;
 
     MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
     {
@@ -369,17 +391,12 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
             getGameTimeStatistics(tournament, &longest_time, &average_time);
             found_finished_tournament = true;
 
-            if (!first)
-            {
-                fprintf(file, "\n");
-            }
-            first = false;
             fprintf(file, "%d\n", getTournamentWinner(tournament));
             fprintf(file, "%d\n", longest_time);
             fprintf(file, "%.2f\n", average_time);
             fprintf(file, "%s\n", getLocation(tournament));
             fprintf(file, "%d\n", getGameCount(tournament));
-            fprintf(file, "%d", getPlayerCount(tournament));
+            fprintf(file, "%d\n", getPlayerCount(tournament));
         }
 
         free(current_tournament_id);
