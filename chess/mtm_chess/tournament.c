@@ -59,7 +59,7 @@ Tournament createTournament(int tournament_id, const char* location_str,
     }
 
     
-    tournament->location = malloc(sizeof(*(tournament->location)) * strlen(location_str));
+    tournament->location = malloc(sizeof(*(tournament->location)) * (strlen(location_str) + 1));
     if (tournament->location == NULL)
     {
         *error = CHESS_OUT_OF_MEMORY;
@@ -101,33 +101,18 @@ void freeTournament(Tournament tournament)
     free(tournament->location);
     mapDestroy(tournament->games);
     free(tournament);
-    return;
 }
 
 
 //Getters & setters:
-int getId(Tournament tournament)
-{
-    return tournament->tournament_id;
-}
-
 int getTournamentWinner(Tournament tournament)
 {
     return tournament->winner;
 }
 
-Map getGames(Tournament tournament)
-{
-    return tournament->games;
-}
-
 char* getLocation(Tournament tournament)
 {
     return tournament->location;
-}
-int getPlayerGameLimit(Tournament tournament)
-{
-    return tournament->max_games_per_player;
 }
 int getPlayerCount(Tournament tournament)
 {
@@ -162,7 +147,7 @@ Tournament copyTournament(Tournament src)
     copy->games = mapCopy(src->games);
     copy->winner = src->winner;
     copy->max_games_per_player = src->max_games_per_player;
-    copy->location = malloc(sizeof(*(copy->location)) * strlen(src->location));
+    copy->location = malloc(sizeof(*(copy->location)) * (strlen(src->location) + 1));
     if(copy->location == NULL)
     {
         return NULL;
@@ -278,16 +263,18 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
         return error;
     }
 
-    int newKey = mapGetSize(tournament->games) + 1;
+    int newKey = mapGetSize(tournament->games) + 1; //TODO: Check if this works. Do we have no game removal?
+    int valueToAdd = isPlayersFirstGame(tournament, first_player)
+                     + isPlayersFirstGame(tournament, second_player);
+
     if(mapPut(tournament->games, &newKey, game) == MAP_OUT_OF_MEMORY)
     {
         freeGame(game);
         return CHESS_OUT_OF_MEMORY;
     }
 
-    tournament->player_count +=
-            isPlayersFirstGame(tournament, first_player)
-            + isPlayersFirstGame(tournament, second_player);
+    tournament->player_count += valueToAdd;
+
 
     return updatePlayersStatistics(game, players_map);
 }
@@ -394,7 +381,7 @@ Map createTournamentPlayersMap(Tournament tournament)
      
     MAP_FOREACH(int*, current_game, tournament->games)
     {
-        game = mapGet(tournament->games, &current_game);
+        game = mapGet(tournament->games, current_game);
         current_player1 = getPlayer1Id(game);
         current_player2 = getPlayer2Id(game);
             
@@ -652,7 +639,7 @@ static bool isPlayersFirstGame(Tournament tournament, int player_id)
             break;
         }
     }
-    return found;
+    return !found;
 }
 
 static ChessResult updatePlayersStatistics(Game game, Map players)
@@ -671,5 +658,4 @@ static ChessResult updatePlayersStatistics(Game game, Map players)
 static void setTournamentWinner(Tournament tournament, int winner)
 {
     tournament->winner = winner;
-    return;
 }

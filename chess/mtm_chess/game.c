@@ -107,7 +107,6 @@ void setPlayerForfeited(Game game, int player_to_remove_id)
     }
 
     game->auto_win = true;
-    return;
 }
 
 int getTime(Game game)

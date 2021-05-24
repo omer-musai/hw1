@@ -22,7 +22,6 @@ Tournament createTournament(int tournament_id, const char* location_str,
 void freeTournament(Tournament tournament);
 
 //Getters & setters:
-int getId(Tournament tournament);
 int getTournamentWinner(Tournament tournament);
 int getGameCount(Tournament tournament);
 //If game_count is not null, the total game count will be put in it.
@@ -30,7 +29,6 @@ int getTotalPlayerPlayTime(Tournament tournament, int id, int* game_count);
 void getGameTimeStatistics(Tournament tournament, int *longest_time, double *average_time);
 bool isFinished(Tournament tournament);
 char* getLocation(Tournament tournament);
-int getPlayerGameLimit(Tournament tournament);
 int getPlayerCount(Tournament tournament);
 
 //additional functions:

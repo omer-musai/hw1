@@ -343,11 +343,13 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
         return CHESS_NO_TOURNAMENTS_ENDED;
     }
 
-    FILE* file = fopen(path_file, "wt");
+    FILE *file = fopen(path_file, "wt");
     if (file == NULL)
     {
         return CHESS_SAVE_FAILURE;
     }
+
+    bool first = true;
 
     MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
     {
@@ -360,12 +362,18 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
             double average_time;
             getGameTimeStatistics(tournament, &longest_time, &average_time);
             found_finished_tournament = true;
+
+            if (!first)
+            {
+                fprintf(file, "\n");
+            }
+            first = false;
             fprintf(file, "%d\n", getTournamentWinner(tournament));
             fprintf(file, "%d\n", longest_time);
             fprintf(file, "%.2f\n", average_time);
             fprintf(file, "%s\n", getLocation(tournament));
             fprintf(file, "%d\n", getGameCount(tournament));
-            fprintf(file, "%d\n", getPlayerCount(tournament));
+            fprintf(file, "%d", getPlayerCount(tournament));
         }
 
         free(current_tournament_id);
@@ -458,7 +466,7 @@ Check tournament.c's getTournamentPlayers function(shay)
 Check calculateTournamentWinner logic(both)
 Remove warning-silencing stuff(shay) 
 !!! Check if it made sense to return copies of the IDs.(shay)
-check about cmakefile and what exactly we required to do(omer)
+check about Makefile and what exactly we required to do(omer)
 
 DONE: 
 split getTournamentPlayers(omer)
@@ -466,7 +474,6 @@ finish playerRemove function (update statistics)(omer)
 Ensure error order.(Omer) 
 Add chessDestroy wherever OUT_OF_MEMORY happens.(both)
 ---Seems okay, I think--- Enable two games with the same players in different tournaments.(shay)
-if you could take a look about the "includes" in the ADT's (im afraid to miss\delete some includes)(shay)
+if you could take a look about the "includes" in the ADTs (im afraid to miss\delete some includes)(shay)
 */
 
-    
