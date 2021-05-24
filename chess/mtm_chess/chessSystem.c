@@ -99,9 +99,14 @@ void chessDestroy(ChessSystem chess)
 ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
                                 int max_games_per_player, const char* tournament_location)
 {
-    if(tournament_location == NULL)
+    if(tournament_location == NULL || chess == NULL)
     {
         return CHESS_NULL_ARGUMENT;
+    }
+    
+    if(mapContains(chess->tournaments, &tournament_id))
+    {
+        return CHESS_TOURNAMENT_ALREADY_EXISTS;
     }
 
     ChessResult error;
@@ -118,16 +123,13 @@ ChessResult chessAddTournament (ChessSystem chess, int tournament_id,
         return error;
     }
 
-    MapResult result = mapPut(chess->tournaments, &tournament_id, tournament);
     
-    if(result == MAP_ITEM_ALREADY_EXISTS)
-    {   
-        freeTournament(tournament);
-        return CHESS_TOURNAMENT_ALREADY_EXISTS;
-    }
+
+    MapResult result = mapPut(chess->tournaments, &tournament_id, tournament);
+    freeTournament(tournament);
+
     if(result == MAP_OUT_OF_MEMORY)
     {
-        freeTournament(tournament);
         chessDestroy(chess);
         return CHESS_OUT_OF_MEMORY;
     }
@@ -172,7 +174,6 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     removeTournamentFromStatistics(tournament, chess->players);
     
     MapResult result = mapRemove(chess->tournaments, &tournament_id);
-    freeTournament(tournament);
 
     assert(result == MAP_SUCCESS);
     
@@ -337,6 +338,11 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 {
+    if(chess == NULL || path_file == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+    
     bool found_finished_tournament = false; //Will be used for asserting.
     if (!chess->tournament_ended)
     {

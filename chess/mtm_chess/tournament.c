@@ -273,10 +273,12 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
         return CHESS_OUT_OF_MEMORY;
     }
 
+    freeGame(game);
+
     tournament->player_count += valueToAdd;
 
 
-    return updatePlayersStatistics(game, players_map);
+    return updatePlayersStatistics(mapGet(tournament->games, &newKey), players_map);
 }
 
 ChessResult removePlayer(Tournament tournament, int player_id)
@@ -390,6 +392,7 @@ Map createTournamentPlayersMap(Tournament tournament)
         {
             player = createPlayer(getPlayer1Id(game));
             MapResult result = mapPut(players_in_tournament, &current_player1, player);
+            freePlayer(player);
             if(result == MAP_OUT_OF_MEMORY)
             {
                 mapDestroy(players_in_tournament);
@@ -400,6 +403,7 @@ Map createTournamentPlayersMap(Tournament tournament)
         {
             player = createPlayer(getPlayer2Id(game));
             MapResult result = mapPut(players_in_tournament, &current_player2, player);
+            freePlayer(player);
             if(result == MAP_OUT_OF_MEMORY)
             {
                 mapDestroy(players_in_tournament);
@@ -592,9 +596,9 @@ static ChessResult updatePlayerStatistics(Game game, Map players, int player_id)
             return CHESS_OUT_OF_MEMORY;
         }
         MapResult error = mapPut(players, &player_id, player);
+        freePlayer(player);
         if (error != MAP_SUCCESS)
         {
-            free(player);
             if (error == MAP_OUT_OF_MEMORY)
             {
                 return CHESS_OUT_OF_MEMORY;
