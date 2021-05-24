@@ -477,26 +477,16 @@ static void quicksort(int *ids, double *levels, int length)
 
 
 /*TODOS:
-(passive):
-Look for camelCased variables.(both)
-Look for TODOs\comments in the various files.(both)
+Valgrind
+Constants (and generally take a look at code conventions)
+Create makefile
+Run tests and Valgrind on server (including finalcheck)
+Look for camelCased variables
+Look for TODOs\comments in the various files
+Dry stuff
+Remove warning-silencing stuff
+Ensure error order (I guess)
 
-(active):
-
-
-
-Check tournament.c's getTournamentPlayers function(shay)
-Check calculateTournamentWinner logic(both)
-Remove warning-silencing stuff(shay) 
-!!! Check if it made sense to return copies of the IDs.(shay)
-check about Makefile and what exactly we required to do(omer)
-
-DONE: 
-split getTournamentPlayers(omer)
-finish playerRemove function (update statistics)(omer)
-Ensure error order.(Omer) 
-Add chessDestroy wherever OUT_OF_MEMORY happens.(both)
----Seems okay, I think--- Enable two games with the same players in different tournaments.(shay)
-if you could take a look about the "includes" in the ADTs (im afraid to miss\delete some includes)(shay)
+More tests never hurt :)
 */
 
