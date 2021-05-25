@@ -9,7 +9,7 @@ $(EXEC): $(OBJECTS)
 
 
 chess.o: chessSystem.c chessSystem.h map.h tournament.h player.h
-	$(CC) $(DEBUG_FLAG) -c $*.c -o chess.o
+	$(CC) $(DEBUG_FLAG) -c chessSystem.c -o chess.o
 
 chessSystemTestsExample.o: chessSystemTestsExample.c chessSystem.h test_utilities.h
 	$(CC) $(DEBUG_FLAG) -c $*.c 
