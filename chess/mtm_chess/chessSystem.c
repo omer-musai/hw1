@@ -171,10 +171,10 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 {  
-     if(chess == NULL)
-        {
-            return CHESS_NULL_ARGUMENT;
-        }
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -198,6 +198,10 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 {
+    if (chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
 	if(player_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -244,6 +248,10 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
+    if (chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -305,6 +313,10 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
 
 ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
 {
+    if (chess == NULL || file == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
     double player_level;
     Player current_player;
     int wins, losses, draws;
@@ -372,7 +384,6 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
     FILE *file = fopen(path_file, "w");
     if (file == NULL)
     {
-        perror("??? ");
         return CHESS_SAVE_FAILURE;
     }
 
@@ -481,10 +492,10 @@ static void quicksort(int *ids, double *levels, int length)
 
 
 /*TODOS:
-Valgrind
+
 Constants (and generally take a look at code conventions)
 Create makefile
-Run tests and Valgrind on server (including finalcheck)
+
 Look for camelCased variables
 Look for TODOs\comments in the various files
 Dry stuff
@@ -492,5 +503,10 @@ Remove warning-silencing stuff
 Ensure error order (I guess)
 
 More tests never hurt :)
+
+DONE:
+Valgrind
+Run tests and Valgrind on server (including finalcheck)
+
 */
 
