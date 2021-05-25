@@ -310,14 +310,14 @@ bool alreadyExistsInTournament(Tournament tournament, int first_player,int secon
     MAP_FOREACH(int*, current_key, tournament->games)
     {
         game = mapGet(tournament->games, current_key);
-        
+
+        free(current_key);
+
         if(((getPlayer1Id(game) == first_player && getPlayer2Id(game) == second_player) ||
             (getPlayer2Id(game) == first_player && getPlayer1Id(game) == second_player))  && !isPlayerForfeited(game))
         {
             return true;
         }
-
-        free(current_key);
     }
     return false;
 }
