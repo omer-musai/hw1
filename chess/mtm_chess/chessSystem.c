@@ -221,15 +221,11 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         {
             break;
         }
-
-        free(current_tournament);
     }
-
-    freePlayer(player);
 
     if (error == CHESS_SUCCESS)
     {
-        MapResult result = mapRemove(chess->players, &player_id);
+        MapResult result = mapRemove(chess->players, &player_id); //This also frees it.
         if (result == MAP_OUT_OF_MEMORY)
         {
             error = CHESS_OUT_OF_MEMORY;
@@ -376,6 +372,7 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
     FILE *file = fopen(path_file, "w");
     if (file == NULL)
     {
+        perror("??? ");
         return CHESS_SAVE_FAILURE;
     }
 
@@ -440,6 +437,13 @@ static int partition(int *ids, double *levels, int length)
 
         while (levels[right] >= pivot && left < right)
         {
+            if (levels[right] == pivot)
+            {
+                if (ids[0] < ids[right])
+                {
+                    break; //Equal level, larger ID; still need to swap.
+                }
+            }
             --right;
         }
 
