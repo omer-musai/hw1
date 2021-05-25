@@ -1,5 +1,5 @@
 CC = gcc
-OBJECTS = map.o chessSystem.o tournament.o game.o player.o chessSystemTestsExample.o
+OBJECTS = chess.o map.o tournament.o game.o player.o chessSystemTestsExample.o
 EXEC = chess
 DEBUG_FLAG = -std=c99 -pedantic-errors -Wall -Werror -g
 COMP_FLAG = -std=c99  -pedantic-errors -Wall -Werror -DNDEBUG
@@ -8,12 +8,11 @@ $(EXEC): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@
 
 
+chess.o: chessSystem.c chessSystem.h map.h tournament.h player.h
+	$(CC) $(DEBUG_FLAG) -c $*.c -o chess.o
 
 chessSystemTestsExample.o: chessSystemTestsExample.c chessSystem.h test_utilities.h
 	$(CC) $(DEBUG_FLAG) -c $*.c 
-
-chessSystem.o: chessSystem.c chessSystem.h map.h tournament.h player.h
-	$(CC) $(DEBUG_FLAG) -c $*.c -o chess.o
 
 tournament.o: tournament.c map.h tournament.h player.h game.h chessSystem.h
 	$(CC) $(DEBUG_FLAG) -c $*.c
@@ -31,10 +30,6 @@ clean:
 	rm -f $(OBJECTS) $(EXEC)
 
 
-
-#we required to use test\chessSystemtestsexample.c in order to supply makefile a main function
-
-#this one for compiling: > gcc -std=c99 -o chessSystem -Wall -pedantic-errors -Werror -DNDEBUG *.c ./tests/chessSystemTestsExample.c -L. –lmap
 
 
 
