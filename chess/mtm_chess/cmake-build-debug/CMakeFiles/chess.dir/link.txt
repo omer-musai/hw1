@@ -1,1 +1,0 @@
-/usr/bin/cc -g  -rdynamic CMakeFiles/chess.dir/chessSystem.c.o  -o chess   -L/mnt/c/Users/ShayH/OneDrive/Desktop/hw1/hw1/chess/mtm_chess/.  -Wl,-rpath,/mnt/c/Users/ShayH/OneDrive/Desktop/hw1/hw1/chess/mtm_chess/. -Wl,-Bstatic -lmap -Wl,-Bdynamic 
