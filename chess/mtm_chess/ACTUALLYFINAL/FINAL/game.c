@@ -62,14 +62,14 @@ int getPlayer2Id(Game game)
 
 bool didPlayerForfeit(Game game, int player_id)
 {
-    if (!isPlayerForfeited(game) || !didPlayerPlay(game, player_id))
+    if (!isPlayerForfeited(game) || (getPlayer1Id(game) != player_id && getPlayer2Id(game) != player_id))
     {
         return false;
     }
 
     Winner winner = getWinner(game);
     return (winner == DRAW //Both players forfeited.
-        || getWinnerId(game) != player_id); //Player forfeited.
+            || getWinnerId(game) != player_id); //Player forfeited.
 }
 
 Winner getWinner(Game game)

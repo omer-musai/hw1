@@ -388,22 +388,24 @@ Map createTournamentPlayersMap(Tournament tournament)
     MAP_FOREACH(int*, current_game, tournament->games)
     {
         game = mapGet(tournament->games, current_game);
+		free(current_game);
         current_player1 = getPlayer1Id(game);
         current_player2 = getPlayer2Id(game);
-            
+        bool p1_forfeited = didPlayerForfeit(game, current_player1),
+            p2_forfeited = didPlayerForfeit(game, current_player2);
 
-        if(!mapContains(players_in_tournament, &current_player1))
+        if(!mapContains(players_in_tournament, &current_player1) && !p1_forfeited)
         {
             player = createPlayer(getPlayer1Id(game));
             MapResult result = mapPut(players_in_tournament, &current_player1, player);
             freePlayer(player);
             if(result == MAP_OUT_OF_MEMORY)
             {
-                mapDestroy(players_in_tournament);
+                mapDestroy(players_in_tournament); 
                 return NULL;
             }
         }
-        if(!mapContains(players_in_tournament, &current_player2))
+        if(!mapContains(players_in_tournament, &current_player2) && !p2_forfeited)
         {
             player = createPlayer(getPlayer2Id(game));
             MapResult result = mapPut(players_in_tournament, &current_player2, player);
@@ -414,12 +416,11 @@ Map createTournamentPlayersMap(Tournament tournament)
                 return NULL;
             }
         }  
-        free(current_game);  
     }
-    return intTournamentPlayersMap(players_in_tournament, tournament);
+    return initTournamentPlayersMap(players_in_tournament, tournament);
 }
 
-Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
+Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
 {
     Game game;
     int player1_id;
@@ -427,6 +428,7 @@ Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
     MAP_FOREACH(int*, current_game, tournament->games)
     {
         game = mapGet(tournament->games, current_game);
+		free(current_game);
         player1_id = getPlayer1Id(game);
         player2_id = getPlayer2Id(game);
 
@@ -437,19 +439,27 @@ Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
         if(winner == FIRST_PLAYER)
         {
             increaseWins(player1);
-            increaseLosses(player2);
+			if (!didPlayerForfeit(game, player2_id))
+			{
+				increaseLosses(player2);
+			}
         }
         else if(winner == SECOND_PLAYER)
         {          
             increaseWins(player2);
-            increaseLosses(player1);
+			if (!didPlayerForfeit(game, player1_id))
+			{
+				increaseLosses(player1);
+			}
         }
         else
-        { 
-            increaseDraws(player1);
-            increaseDraws(player2);
+        {
+			if (!isPlayerForfeited(game))
+			{
+				increaseDraws(player1);
+				increaseDraws(player2);
+			}
         }
-        free(current_game);
     }
     return players_in_tournament;
 }

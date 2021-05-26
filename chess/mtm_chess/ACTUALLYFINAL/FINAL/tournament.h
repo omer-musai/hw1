@@ -42,7 +42,7 @@ void decreaseTournamentStatistics(Game game, Player player1, Player player2);
 ChessResult removePlayer(Tournament tournament, int player_id, Map players);
 bool alreadyExistsInTournament(Tournament tournament, int first_player,int second_player);
 int calculateTournamentWinner(Tournament tournament);
-Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament);
+Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament);
 Map createTournamentPlayersMap(Tournament tournament);
 Tournament copyTournament(Tournament src);
 ChessResult endTournament(Tournament tournament);

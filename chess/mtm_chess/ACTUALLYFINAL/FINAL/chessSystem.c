@@ -440,26 +440,19 @@ static int partition(int *ids, double *levels, int length)
 
     while (left <= right)
     {
-        while (levels[left] < pivot && left < right)
+        while ((levels[left] < pivot || (levels[left] == pivot && ids[left] > ids[0])) && left < right)
         {
             ++left;
         }
 
-        while (levels[right] >= pivot && left < right)
+        while ((levels[right] > pivot || (levels[right] == pivot && ids[right] < ids[0])) && left < right)
         {
-            if (levels[right] == pivot)
-            {
-                if (ids[0] < ids[right])
-                {
-                    break; //Equal level, larger ID; still need to swap.
-                }
-            }
             --right;
         }
 
         if (left == right)
         {
-            if (levels[left] < pivot)
+            if (levels[left] < pivot || (levels[left] == pivot && ids[left] > ids[0]))
             {
                 swapIntegers(ids + left, ids);
                 swapDoubles(levels + left, levels);
