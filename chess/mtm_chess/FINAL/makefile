@@ -6,7 +6,7 @@ DNDEBUG_FLAG = -DNDEBUG
 COMP_FLAG = -std=c99  -pedantic-errors -Wall -Werror
 
 $(EXEC): $(OBJECTS)
-	$(CC) $(COMP_FLAG) $(OBJECTS) -o $@ -L. -lmap
+	$(CC) $(COMP_FLAG) $(DNDEBUG) $(OBJECTS) -o $@ -L. -lmap
 
 
 chess.o: chessSystem.c chessSystem.h map.h tournament.h player.h
