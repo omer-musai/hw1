@@ -217,6 +217,11 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
         tournament = mapGet(chess->tournaments, current_tournament);
+        if (isFinished(tournament))
+        {
+            free(current_tournament);
+            continue;
+        }
         error = removePlayer(tournament, player_id, chess->players);
         free(current_tournament);
         if (error != CHESS_SUCCESS)

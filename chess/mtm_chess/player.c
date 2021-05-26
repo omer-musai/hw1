@@ -67,33 +67,6 @@ int getDraws(Player player)
     return player->draws;
 }
 
-void setWins(Player player, int wins)
-{
-    assert(player != NULL);
-    if (player != NULL && wins >=0)
-    {
-        player->wins = wins;
-    }
-}
-
-void setLosses(Player player, int losses)
-{
-    assert(player != NULL);
-    if (player != NULL && losses >=0)
-    {
-        player->losses = losses;
-    }
-}
-
-void setDraws(Player player, int draws)
-{
-    assert(player != NULL);
-    if (player != NULL && draws >= 0)
-    {
-        player->draws = draws;
-    }
-}
-
 //additional functions:
 void increaseWins(Player player)
 {
@@ -125,7 +98,7 @@ void increaseLosses(Player player)
 void decreaseWins(Player player)
 {
     assert(player != NULL);
-    if (player != NULL)
+    if (player != NULL && (player->wins-1) >= 0)
     {
         --(player->wins);
     }
@@ -134,7 +107,7 @@ void decreaseWins(Player player)
 void decreaseDraws(Player player)
 {
     assert(player != NULL);
-    if (player != NULL)
+    if (player != NULL && (player->draws-1) >= 0)
     {
         --(player->draws);
     }
@@ -143,7 +116,7 @@ void decreaseDraws(Player player)
 void decreaseLosses(Player player)
 {
     assert(player != NULL);
-    if (player != NULL)
+    if (player != NULL && (player->losses-1) >= 0)
     {
         --(player->losses);
     }

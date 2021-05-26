@@ -17,9 +17,6 @@ void freePlayer(Player player);
 int getWins(Player player);
 int getLosses(Player player);
 int getDraws(Player player);
-void setWins(Player player, int wins);
-void setLosses(Player player, int losses);
-void setDraws(Player player, int draws);
 
 //additional functions:
 void increaseWins(Player player);

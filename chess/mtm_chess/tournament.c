@@ -433,7 +433,7 @@ Map intTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
         Player player1 = mapGet(players_in_tournament, &player1_id);
         Player player2 = mapGet(players_in_tournament, &player2_id);
         Winner winner = getWinner(game);
-           
+
         if(winner == FIRST_PLAYER)
         {
             increaseWins(player1);

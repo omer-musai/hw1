@@ -24,6 +24,7 @@ int getPlayer2Id(Game game);
 Winner getWinner(Game game);
 int getWinnerId(Game game);
 bool isPlayerForfeited(Game game);
+bool didPlayerForfeit(Game game, int player_id);
 void setPlayerForfeited(Game game, int player_to_remove_id, Map players);
 int getTime(Game game);
 
