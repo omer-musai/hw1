@@ -188,9 +188,7 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
     
     removeTournamentFromStatistics(tournament, chess->players);
     
-    MapResult result = mapRemove(chess->tournaments, &tournament_id);
-
-    assert(result == MAP_SUCCESS);
+    mapRemove(chess->tournaments, &tournament_id);
     
     return CHESS_SUCCESS;
 }
@@ -374,8 +372,7 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
     {
         return CHESS_NULL_ARGUMENT;
     }
-    
-    bool found_finished_tournament = false; //Will be used for asserting.
+
     if (!chess->tournament_ended)
     {
         return CHESS_NO_TOURNAMENTS_ENDED;
@@ -397,7 +394,6 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
             int longest_time;
             double average_time;
             getGameTimeStatistics(tournament, &longest_time, &average_time);
-            found_finished_tournament = true;
 
             fprintf(file, "%d\n", getTournamentWinner(tournament));
             fprintf(file, "%d\n", longest_time);
@@ -409,8 +405,6 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 
         free(current_tournament_id);
     }
-
-    assert(found_finished_tournament);
 
     if (fclose(file) == EOF)
     {
