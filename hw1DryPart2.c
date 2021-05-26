@@ -2,24 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*errors list:
+/*
+errors list:
 
-implementation errors:
-1)line 23 - implementing an int value to a pointer
-2)line 24 - no memory for the "\0" character has been allocated
-3)line 27 - for i=0 str[*x - i] is out of the string boundaries
-4)
-5)
+Implementation errors:
+
+1) x has to be dereferenced to have a value placed in it. ("x = strlen(...")
+2) x % 2 == 0 needs to be x % 2 != 0.
+3) malloc size should be + 1. (This is to account for the null terminator.)
+4) Should be [*x - 1 - i]. (Both to capture the first character, and to avoid read violation.)
+5) Check if x is NULL. (Instructions imply that it could be.)
 
 
-proper programming errors:
-1)line 24 - missing a NULL check for malloc
-2)line 30 - can just write "else"
-3)line 24 - even if sizeof(char) is equal 1 it's better to write it down
-4)line 21 - need to implement a value to a pointer ASAP (use malloc the next line or at the same line)
-5)line 23 - since we are using c99 "int i" can go inside the for loop
-6)line 30 - need to check that the pointer x is not NULL
+Proper programming errors:
 
+1) Need to check malloc's return value.
+2) Need to add a null terminator. 
+3) Make the second "if" a simple "else".
+4) Need to implement a value to a pointer ASAP (use malloc the next line or at the same line).
+5) Since we are using c99 "int i" can go inside the for loop.
+6) Curly brackets around loop & condition blocks. (Convention.)
+7) malloc(*x) -> malloc(sizeof(*str) * (*x)) though it should work either way.
 
 */
 
@@ -42,14 +45,18 @@ char* foo(char* str, int* x) {
  }
 
 //THE FIXED CODE
-char* foo(char* str, int* x) 
+char* foo(char* str, int* x)
 {
-    if(x == NULL)
+    if (str == NULL)
     {
         return NULL;
     }
 
-    *x = strlen(str);
+    int length = strlen(str);
+    if (x != NULL)
+    {
+        *x = length;
+    }
 
     char* str2 = malloc(sizeof(char) * (*(x) + 1));
     if(str2 == NULL)
@@ -57,12 +64,13 @@ char* foo(char* str, int* x)
         return NULL;
     }
 
-    for (int i = 0; i < *x; i++)
+    for (int i = 0; i < length; i++)
     {
-        str2[i] = str[*x - i - 1];
+        str2[i] = str[length - i - 1];
     }
-    
-    if (*x % 2 == 0) 
+    str2[length] = '\0';
+
+    if (length % 2 != 0)
     {
         printf("%s", str);
     }
