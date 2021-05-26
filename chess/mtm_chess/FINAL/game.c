@@ -60,6 +60,18 @@ int getPlayer2Id(Game game)
     return game->id_player2;
 }
 
+bool didPlayerForfeit(Game game, int player_id)
+{
+    if (!isPlayerForfeited(game) || !didPlayerPlay(game, player_id))
+    {
+        return false;
+    }
+
+    Winner winner = getWinner(game);
+    return (winner == DRAW //Both players forfeited.
+        || getWinnerId(game) != player_id); //Player forfeited.
+}
+
 Winner getWinner(Game game)
 {
     return game->winner;
