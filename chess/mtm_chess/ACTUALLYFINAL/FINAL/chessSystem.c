@@ -7,7 +7,7 @@
 #include "tournament.h"
 
 /*
-GOLLUM:
+G O L L U M
            ___
          .';:;'.
         /_' _' /\   __
@@ -217,11 +217,6 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     MAP_FOREACH(int*, current_tournament, chess->tournaments)
     {
         tournament = mapGet(chess->tournaments, current_tournament);
-        if (isFinished(tournament))
-        {
-            free(current_tournament);
-            continue;
-        }
         error = removePlayer(tournament, player_id, chess->players);
         free(current_tournament);
         if (error != CHESS_SUCCESS)
@@ -289,7 +284,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     }
 
     double total_time = 0;
-    int num_of_games = 0, tournament_games;
+    int num_of_games = 0, tournament_games = 0;
     
     MAP_FOREACH(int*, current_tournament_id, chess->tournaments)
     {

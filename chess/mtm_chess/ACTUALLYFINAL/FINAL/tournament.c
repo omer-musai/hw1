@@ -13,6 +13,7 @@ static ChessResult updatePlayerStatistics(Game game, Map players, int player_id)
 //Calls the previous function on both players of a given game.
 static ChessResult updatePlayersStatistics(Game game, Map players);
 static void setTournamentWinner(Tournament tournament, int winner);
+static bool wasPlayerRemovedAfterFinish(Tournament tournament, int player_id);
 
 struct Tournament_t
 {
@@ -23,7 +24,8 @@ struct Tournament_t
     int max_games_per_player;
     int player_count;
     bool finished;
-    
+    int* players_removed_after_finished;
+    int players_removed_after_finished_count;
 };
 
 
@@ -83,6 +85,9 @@ Tournament createTournament(int tournament_id, const char* location_str,
         return NULL;
     }
 
+    tournament->players_removed_after_finished = NULL;
+    tournament->players_removed_after_finished_count = 0;
+
     tournament->max_games_per_player = max_games_per_player;
     tournament->player_count = 0;
     tournament->tournament_id = tournament_id;  
@@ -99,6 +104,7 @@ void freeTournament(Tournament tournament)
     }
 
     free(tournament->location);
+    free(tournament->players_removed_after_finished);
     mapDestroy(tournament->games);
     free(tournament);
 }
@@ -150,7 +156,29 @@ Tournament copyTournament(Tournament src)
     copy->location = malloc(sizeof(*(copy->location)) * (strlen(src->location) + 1));
     if(copy->location == NULL)
     {
+        free(copy);
         return NULL;
+    }
+
+    copy->players_removed_after_finished_count = src->players_removed_after_finished_count;
+    if (copy->players_removed_after_finished_count == 0)
+    {
+        copy->players_removed_after_finished = NULL;
+    }
+    else
+    {
+        copy->players_removed_after_finished =
+            malloc(sizeof(int) * copy->players_removed_after_finished_count);
+        if (copy->players_removed_after_finished == NULL)
+        {
+            free(copy->location);
+            free(copy);
+            return NULL;
+        }
+        for (int current = 0; current < copy->players_removed_after_finished_count; ++current)
+        {
+            copy->players_removed_after_finished[current] = src->players_removed_after_finished[current];
+        }
     }
 
     strcpy(copy->location, src->location);
@@ -287,6 +315,24 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
 
 ChessResult removePlayer(Tournament tournament, int player_id, Map players)
 {
+    if (tournament->finished)
+    {
+        if (!wasPlayerRemovedAfterFinish(tournament, player_id))
+        {
+            tournament->players_removed_after_finished
+                = realloc(tournament->players_removed_after_finished,
+                    sizeof(int)*(tournament->players_removed_after_finished_count + 1));
+            if (tournament->players_removed_after_finished == NULL)
+            {
+                return CHESS_OUT_OF_MEMORY;
+            }
+            tournament->players_removed_after_finished[tournament->players_removed_after_finished_count]
+                = player_id;
+            ++(tournament->players_removed_after_finished_count);
+        }
+
+        return CHESS_SUCCESS;
+    }
     MAP_FOREACH(int*, current_game_id, tournament->games)
     {
         Game game = mapGet(tournament->games, current_game_id);
@@ -324,6 +370,13 @@ bool alreadyExistsInTournament(Tournament tournament, int first_player,int secon
 
 int getTotalPlayerPlayTime(Tournament tournament, int id, int* tournament_game_count)
 {
+    assert(tournament != NULL);
+
+    if (wasPlayerRemovedAfterFinish(tournament, id))
+    {
+        return 0;
+    }
+
     int total_playtime = 0;
     if (tournament_game_count != NULL)
     {
@@ -678,4 +731,21 @@ static ChessResult updatePlayersStatistics(Game game, Map players)
 static void setTournamentWinner(Tournament tournament, int winner)
 {
     tournament->winner = winner;
+}
+
+static bool wasPlayerRemovedAfterFinish(Tournament tournament, int player_id)
+{
+    if (tournament == NULL || tournament->players_removed_after_finished_count == 0)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < tournament->players_removed_after_finished_count; ++i)
+    {
+        if (tournament->players_removed_after_finished[i] == player_id)
+        {
+            return true;
+        }
+    }
+    return false;
 }
