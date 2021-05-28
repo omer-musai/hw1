@@ -395,12 +395,15 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
             double average_time;
             getGameTimeStatistics(tournament, &longest_time, &average_time);
 
-            fprintf(file, "%d\n", getTournamentWinner(tournament));
-            fprintf(file, "%d\n", longest_time);
-            fprintf(file, "%.2f\n", average_time);
-            fprintf(file, "%s\n", getLocation(tournament));
-            fprintf(file, "%d\n", getGameCount(tournament));
-            fprintf(file, "%d\n", getPlayerCount(tournament));
+            if(fprintf(file, "%d\n%d\n%.2f\n%s\n%d\n%d\n",
+				getTournamentWinner(tournament), longest_time, average_time,
+				getLocation(tournament), getGameCount(tournament), getPlayerCount(tournament)
+				) < 0)
+			{
+				free(current_tournament_id);
+				fclose(file);
+				return CHESS_SAVE_FAILURE;
+			}
         }
 
         free(current_tournament_id);
@@ -476,24 +479,3 @@ static void quicksort(int *ids, double *levels, int length)
     quicksort(ids, levels, pivot_index);
     quicksort(ids + pivot_index + 1, levels + pivot_index + 1, length - (pivot_index + 1));
 }
-
-
-/*TODOS:
-
-Constants (and generally take a look at code conventions)
-Create makefile
-
-Look for camelCased variables
-Look for TODOs\comments in the various files
-Dry stuff
-Remove warning-silencing stuff
-Ensure error order (I guess)
-
-More tests never hurt :)
-
-DONE:
-Valgrind
-Run tests and Valgrind on server (including finalcheck)
-
-*/
-

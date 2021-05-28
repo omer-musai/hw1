@@ -295,7 +295,7 @@ ChessResult addGameToTournament(Tournament tournament, int first_player, int sec
         return error;
     }
 
-    int newKey = mapGetSize(tournament->games) + 1; //TODO: Check if this works. Do we have no game removal?
+    int newKey = mapGetSize(tournament->games) + 1;
     int valueToAdd = isPlayersFirstGame(tournament, first_player)
                      + isPlayersFirstGame(tournament, second_player);
 
