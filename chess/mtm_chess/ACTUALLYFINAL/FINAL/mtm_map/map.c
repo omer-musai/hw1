@@ -125,6 +125,8 @@ bool mapContains(Map map, MapKeyElement element)
     {
         return false;
     }
+	
+	map->iterator = NULL; //I admit I really don't want to do this, but the instructions do. :(
 
     SearchResults results;
     findPreviousElementPosition(map, element, &results);
