@@ -26,6 +26,7 @@ void decreaseWins(Player player);
 void decreaseLosses(Player player);
 void decreaseDraws(Player player);
 Player copyPlayer(Player player);
+int playerScore(Player player);
 
 //Map-related functions:
 MapDataElement mapPlayerCopy(MapDataElement player);
