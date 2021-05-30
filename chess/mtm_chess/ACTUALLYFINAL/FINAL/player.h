@@ -13,12 +13,12 @@ typedef struct Player_t *Player;
 Player createPlayer(int player_id);
 void freePlayer(Player player);
 
-//Getters & setters:
+//Getters:
 int getWins(Player player);
 int getLosses(Player player);
 int getDraws(Player player);
 
-//additional functions:
+//Additional functions:
 void increaseWins(Player player);
 void increaseLosses(Player player);
 void increaseDraws(Player player);
@@ -26,7 +26,6 @@ void decreaseWins(Player player);
 void decreaseLosses(Player player);
 void decreaseDraws(Player player);
 Player copyPlayer(Player player);
-int playerScore(Player player);
 
 //Map-related functions:
 MapDataElement mapPlayerCopy(MapDataElement player);

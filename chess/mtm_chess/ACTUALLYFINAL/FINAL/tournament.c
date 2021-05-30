@@ -14,6 +14,12 @@ static ChessResult updatePlayerStatistics(Game game, Map players, int player_id)
 static ChessResult updatePlayersStatistics(Game game, Map players);
 static void setTournamentWinner(Tournament tournament, int winner);
 static bool wasPlayerRemovedAfterFinish(Tournament tournament, int player_id);
+static int calculateTournamentWinner(Tournament tournament);
+static Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament);
+static Map createTournamentPlayersMap(Tournament tournament);
+
+//An auxiliary function of removeTournamentFromStatistics:
+static void decreaseTournamentStatistics(Game game, Player player1, Player player2);
 
 struct Tournament_t
 {
@@ -228,7 +234,7 @@ ChessResult removeTournamentFromStatistics(Tournament tournament, Map players)
     return CHESS_SUCCESS;
 }
 
-void decreaseTournamentStatistics(Game game, Player player1, Player player2)
+static void decreaseTournamentStatistics(Game game, Player player1, Player player2)
 {
     Winner winner = getWinner(game);
     if (isPlayerForfeited(game))
@@ -421,7 +427,7 @@ void getGameTimeStatistics(Tournament tournament, int *longest_time, double *ave
     *average_time = (double)total_time/getGameCount(tournament);
 }
 
-Map createTournamentPlayersMap(Tournament tournament)
+static Map createTournamentPlayersMap(Tournament tournament)
 {
     Map players_in_tournament = mapCreate(&mapPlayerCopy,
                                             &mapPlayerIdCopy,
@@ -473,7 +479,7 @@ Map createTournamentPlayersMap(Tournament tournament)
     return initTournamentPlayersMap(players_in_tournament, tournament);
 }
 
-Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
+static Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
 {
     Game game;
     int player1_id;
@@ -517,7 +523,7 @@ Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament)
     return players_in_tournament;
 }
 
-int calculateTournamentWinner(Tournament tournament)
+static int calculateTournamentWinner(Tournament tournament)
 {
      Player current_player;
      Player current_winner;

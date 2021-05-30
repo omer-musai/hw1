@@ -24,28 +24,28 @@ void freeTournament(Tournament tournament);
 //Getters & setters:
 int getTournamentWinner(Tournament tournament);
 int getGameCount(Tournament tournament);
+
+//Gets a player's total play time in a given tournament.
 //If game_count is not null, the total game count will be put in it.
 int getTotalPlayerPlayTime(Tournament tournament, int id, int* tournament_game_count);
+
+//Returns longest game time as well as average game time for a given tournament.
 void getGameTimeStatistics(Tournament tournament, int *longest_time, double *average_time);
 bool isFinished(Tournament tournament);
 char* getLocation(Tournament tournament);
 int getPlayerCount(Tournament tournament);
 
-//additional functions:
+//Additional functions:
 ChessResult addGameToTournament(Tournament tournament, int first_player, int second_player,
                                 Winner winner, int play_time, Map players_map);
 
 //This updates player statistics before a tournament's removal.
 //The players map is the one stored in the ChessSystem.
 ChessResult removeTournamentFromStatistics(Tournament tournament, Map players);
-void decreaseTournamentStatistics(Game game, Player player1, Player player2);
 ChessResult removePlayer(Tournament tournament, int player_id, Map players);
 bool alreadyExistsInTournament(Tournament tournament, int first_player,int second_player);
-int calculateTournamentWinner(Tournament tournament);
-Map initTournamentPlayersMap(Map players_in_tournament, Tournament tournament);
-Map createTournamentPlayersMap(Tournament tournament);
+ChessResult endTournament(Tournament tournament); //Sets tournament to finished, calculates the winner and sets the winner field.
 Tournament copyTournament(Tournament src);
-ChessResult endTournament(Tournament tournament);
 
 //Map-related functions:
 MapDataElement mapTournamentCopy(MapDataElement tournament);
