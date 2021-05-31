@@ -318,7 +318,7 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
     double player_level;
     Player current_player;
     int wins, losses, draws;
-    int counter = 0;
+    int players_with_any_games = 0;
     int size = mapGetSize(chess->players);
 
     double* player_levels = malloc(sizeof(*player_levels) * size);
@@ -342,19 +342,24 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
         losses = getLosses(current_player);
         draws = getDraws(current_player);
 
-        player_level = ((double)(6*wins - 10*losses + 2*draws) / (wins + losses + draws));
+        if (wins != 0 || losses != 0 || draws != 0) //Player doesn't have 0 games.
+        {
+            player_level = ((double)(6*wins - 10*losses + 2*draws) / (wins + losses + draws));
 
-        player_levels[counter] = player_level;
-        ids[counter++] = *current_player_id;
+            player_levels[players_with_any_games] = player_level;
+            ids[players_with_any_games++] = *current_player_id;
+        }
         free(current_player_id);
     }
 
-    quicksort(ids, player_levels, size);
+    quicksort(ids, player_levels, players_with_any_games);
 
     ChessResult error = CHESS_SUCCESS;
-    for(int current = 0; current < size && error == CHESS_SUCCESS; ++current)
+    for(int current = 0; current < players_with_any_games && error == CHESS_SUCCESS; ++current)
     {
-        if (fprintf(file, "%d %.2f\n", ids[size - 1 - current], player_levels[size - 1 - current]) < 0)
+        if (fprintf(file, "%d %.2f\n",
+                    ids[players_with_any_games - 1 - current],
+                    player_levels[players_with_any_games - 1 - current]) < 0)
         {
             error = CHESS_SAVE_FAILURE;
         }
