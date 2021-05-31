@@ -147,7 +147,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_NULL_ARGUMENT;
     }
     
-    if(tournament_id <= 0 || first_player <= 0 || second_player <= 0)
+    if(tournament_id <= 0 || first_player <= 0 || second_player <= 0 || first_player == second_player)
     {
         return CHESS_INVALID_ID;
     }
@@ -277,7 +277,7 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
         return INVALID;
     }
 
-    if(player_id < 0)
+    if(player_id <= 0)
     {
         *chess_result = CHESS_INVALID_ID;
         return INVALID;
